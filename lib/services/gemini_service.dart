@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import '../models/extracted_project.dart';
 
 /// Replace with your actual Gemini API key.
 /// Get one at: https://aistudio.google.com/app/apikey
@@ -58,6 +60,62 @@ Guidelines:
     final response = await _model.generateContent([Content.multi(content)]);
     return response.text?.trim() ??
         'Unable to generate post. Please try again.';
+  }
+
+  /// Extracts a list of projects from a PDF file (e.g., Resume or LinkedIn profile).
+  Future<List<ExtractedProject>> extractProjectsFromPdf(String pdfPath) async {
+    final systemContext = '''
+You are an expert technical recruiter and resume parser.
+I will provide you with a PDF document (a resume or LinkedIn profile).
+Your job is to extract all software engineering, data science, or technical projects from this document.
+
+For each project, you should extract its title and a description.
+The description should combine any bullet points, summarizing what the project is, the tech stack used, and any achievements.
+
+Output the result STRICTLY as a JSON array of objects, where each object has "title" and "description" keys.
+Do not wrap the JSON in Markdown formatting blocks (e.g., no ```json ... ```). Output raw valid JSON only.
+
+Example format:
+[
+  {
+    "title": "E-commerce Backend",
+    "description": "Built a scalable backend using Node.js and PostgreSQL. Handled 10k daily requests and reduced latency by 30%."
+  }
+]
+''';
+
+    final content = <Part>[TextPart(systemContext)];
+
+    try {
+      final file = File(pdfPath);
+      final bytes = await file.readAsBytes();
+      // Use application/pdf for Gemini 1.5 Flash PDF support
+      content.add(DataPart('application/pdf', bytes));
+
+      final response = await _model.generateContent([Content.multi(content)]);
+      final rawText = response.text?.trim() ?? '[]';
+      
+      // Attempt to clean up markdown if the model hallucinated it anyway
+      final cleanedText = _cleanJsonString(rawText);
+
+      return ExtractedProject.listFromJson(cleanedText);
+    } catch (e) {
+      print('Error extracting from PDF: $e');
+      return [];
+    }
+  }
+
+  String _cleanJsonString(String raw) {
+    var cleaned = raw.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.substring(7);
+    } else if (cleaned.startsWith('```')) {
+      cleaned = cleaned.substring(3);
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.substring(0, cleaned.length - 3);
+    }
+    return cleaned.trim();
   }
 
   String _platformPrompt(String platform) {
