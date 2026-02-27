@@ -1,17 +1,16 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/extracted_project.dart';
-
-/// Replace with your actual Gemini API key.
-/// Get one at: https://aistudio.google.com/app/apikey
-const _kGeminiApiKey = 'YOUR_GEMINI_API_KEY_HERE';
+import '../env/env.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
 
   GeminiService() {
-    _model = GenerativeModel(model: 'gemini-1.5-flash', apiKey: _kGeminiApiKey);
+    _model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: Env.geminiApiKey,
+    );
   }
 
   Future<String> generatePost({
@@ -94,7 +93,7 @@ Example format:
 
       final response = await _model.generateContent([Content.multi(content)]);
       final rawText = response.text?.trim() ?? '[]';
-      
+
       // Attempt to clean up markdown if the model hallucinated it anyway
       final cleanedText = _cleanJsonString(rawText);
 
@@ -107,13 +106,17 @@ Example format:
 
   String _cleanJsonString(String raw) {
     var cleaned = raw.trim();
-    if (cleaned.startsWith('```json')) {
-      cleaned = cleaned.substring(7);
-    } else if (cleaned.startsWith('```')) {
-      cleaned = cleaned.substring(3);
-    }
-    if (cleaned.endsWith('```')) {
-      cleaned = cleaned.substring(0, cleaned.length - 3);
+    // Use regex to find the json block if there's any markdown
+    final match = RegExp(r'```(?:json)?\s*([\s\S]*?)```').firstMatch(cleaned);
+    if (match != null) {
+      cleaned = match.group(1)!;
+    } else {
+      // Find First [ and last ]
+      final start = cleaned.indexOf('[');
+      final end = cleaned.lastIndexOf(']');
+      if (start != -1 && end != -1 && end > start) {
+        cleaned = cleaned.substring(start, end + 1);
+      }
     }
     return cleaned.trim();
   }
