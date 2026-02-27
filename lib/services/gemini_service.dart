@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../models/extracted_project.dart';
 import '../env/env.dart';
 
@@ -8,7 +9,7 @@ class GeminiService {
 
   GeminiService() {
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       apiKey: Env.geminiApiKey,
     );
   }
@@ -65,7 +66,7 @@ Guidelines:
   Future<List<ExtractedProject>> extractProjectsFromPdf(String pdfPath) async {
     final systemContext = '''
 You are an expert technical recruiter and resume parser.
-I will provide you with a PDF document (a resume or LinkedIn profile).
+I will provide you with the extracted text from a PDF document (a resume or LinkedIn profile).
 Your job is to extract all software engineering, data science, or technical projects from this document.
 
 For each project, you should extract its title and a description.
@@ -83,24 +84,35 @@ Example format:
 ]
 ''';
 
-    final content = <Part>[TextPart(systemContext)];
-
     try {
       final file = File(pdfPath);
       final bytes = await file.readAsBytes();
-      // Use application/pdf for Gemini 1.5 Flash PDF support
-      content.add(DataPart('application/pdf', bytes));
+
+      // Extract text from the PDF
+      final PdfDocument document = PdfDocument(inputBytes: bytes);
+      final String extractedText = PdfTextExtractor(document).extractText();
+      document.dispose();
+
+      final content = <Part>[
+        TextPart(systemContext),
+        TextPart('\n\n--- EXTRACTED RESUME TEXT ---\n\n$extractedText'),
+      ];
 
       final response = await _model.generateContent([Content.multi(content)]);
       final rawText = response.text?.trim() ?? '[]';
+
+      print('--- GEMINI RAW RESPONSE ---');
+      print(rawText);
+      print('---------------------------');
 
       // Attempt to clean up markdown if the model hallucinated it anyway
       final cleanedText = _cleanJsonString(rawText);
 
       return ExtractedProject.listFromJson(cleanedText);
-    } catch (e) {
+    } catch (e, stacktrace) {
       print('Error extracting from PDF: $e');
-      return [];
+      print(stacktrace);
+      throw Exception('Failed to extract projects: $e');
     }
   }
 

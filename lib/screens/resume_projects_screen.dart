@@ -17,7 +17,7 @@ class ResumeProjectsScreen extends StatefulWidget {
 
 class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
   final _geminiService = GeminiService();
-  
+
   bool _isLoading = false;
   List<ExtractedProject> _projects = [];
   String? _error;
@@ -52,7 +52,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _error = 'Failed to parse PDF: $e';
+        _error = 'Failed to parse PDF.\n\nDetails:\n$e';
       });
     }
   }
@@ -62,30 +62,27 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
       title: project.title,
       description: project.description,
     );
-    
+
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => ComposerScreen(existingDraft: draft),
-      ),
+      MaterialPageRoute(builder: (_) => ComposerScreen(existingDraft: draft)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Import from Resume'),
-      ),
+      appBar: AppBar(title: const Text('Import from Resume')),
       body: _buildBody(),
-      floatingActionButton: _projects.isEmpty && !_isLoading
-          ? FloatingActionButton.extended(
-              onPressed: _pickAndParsePdf,
-              icon: const Icon(Icons.picture_as_pdf_outlined),
-              label: const Text('Select PDF'),
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.background,
-            )
-          : null,
+      floatingActionButton:
+          _projects.isEmpty && !_isLoading
+              ? FloatingActionButton.extended(
+                onPressed: _pickAndParsePdf,
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: const Text('Select PDF'),
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.background,
+              )
+              : null,
     );
   }
 
@@ -100,10 +97,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
             Text(
               'AI is reading your resume...\nExtracting projects...',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                color: AppColors.textMuted,
-                height: 1.5,
-              ),
+              style: GoogleFonts.inter(color: AppColors.textMuted, height: 1.5),
             ),
           ],
         ),
@@ -132,7 +126,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
               OutlinedButton(
                 onPressed: _pickAndParsePdf,
                 child: const Text('Try Again'),
-              )
+              ),
             ],
           ),
         ),
@@ -169,10 +163,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
             Text(
               'Upload your PDF resume or LinkedIn profile.\nWe will extract your projects to turn into posts.',
               textAlign: TextAlign.center,
-              style: GoogleFonts.inter(
-                color: AppColors.textMuted,
-                height: 1.5,
-              ),
+              style: GoogleFonts.inter(color: AppColors.textMuted, height: 1.5),
             ),
           ],
         ),
