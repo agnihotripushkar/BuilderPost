@@ -6,40 +6,48 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/project_draft.dart';
 import '../models/generated_post.dart';
+import '../models/history_entry.dart';
 import '../providers/composer_provider.dart';
+import '../providers/history_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/post_preview_card.dart';
 import '../widgets/shimmer_loader.dart';
 
 class PreviewScreen extends ConsumerStatefulWidget {
   final ProjectDraft draft;
-  final GeneratedPost post;
+  final List<GeneratedPost> posts;
 
-  const PreviewScreen({super.key, required this.draft, required this.post});
+  const PreviewScreen({super.key, required this.draft, required this.posts});
 
   @override
   ConsumerState<PreviewScreen> createState() => _PreviewScreenState();
 }
 
 class _PreviewScreenState extends ConsumerState<PreviewScreen> {
-  late GeneratedPost _post;
+  late List<GeneratedPost> _posts;
+  late PageController _pageCtrl;
+  int _currentIndex = 0;
   bool _isRegenerating = false;
   final _refineCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _post = widget.post;
+    _posts = widget.posts;
+    _pageCtrl = PageController();
   }
 
   @override
   void dispose() {
+    _pageCtrl.dispose();
     _refineCtrl.dispose();
     super.dispose();
   }
 
+  GeneratedPost get _currentPost => _posts[_currentIndex];
+
   Future<void> _copyToClipboard() async {
-    await Clipboard.setData(ClipboardData(text: _post.content));
+    await Clipboard.setData(ClipboardData(text: _currentPost.content));
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -68,46 +76,155 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _share() async {
-    await Share.share(_post.content, subject: widget.draft.title);
+    await Share.share(_currentPost.content, subject: widget.draft.title);
+  }
+
+  Future<void> _saveToHistory() async {
+    final entry = HistoryEntry.create(
+      projectTitle:
+          widget.draft.title.isEmpty
+              ? 'Untitled Project'
+              : widget.draft.title,
+      platform: _currentPost.platform,
+      tone: widget.draft.tone,
+      content: _currentPost.content,
+    );
+    await ref.read(historyProvider.notifier).addEntry(entry);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.bookmark_added_rounded,
+                color: AppColors.accentGreen,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Option ${_currentIndex + 1} saved to history!',
+                style: GoogleFonts.inter(color: AppColors.textPrimary),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> _regenerate() async {
     setState(() => _isRegenerating = true);
 
     final refineHint = _refineCtrl.text.trim();
-
-    // Append refine hint to description if provided
     if (refineHint.isNotEmpty) {
-      ref
-          .read(composerProvider.notifier)
-          .updateDescription(
-            '${widget.draft.description}\n\nUser refinement request: $refineHint',
-          );
+      ref.read(composerProvider.notifier).updateDescription(
+        '${widget.draft.description}\n\nUser refinement request: $refineHint',
+      );
     }
 
     await ref.read(composerProvider.notifier).generate();
     final state = ref.read(composerProvider);
 
     if (state.status == ComposerStatus.done &&
-        state.generatedPost != null &&
+        state.generatedPosts != null &&
+        state.generatedPosts!.isNotEmpty &&
         mounted) {
       setState(() {
-        _post = state.generatedPost!;
+        _posts = state.generatedPosts!;
+        _currentIndex = 0;
         _isRegenerating = false;
         _refineCtrl.clear();
       });
+      _pageCtrl.jumpToPage(0);
     } else {
       setState(() => _isRegenerating = false);
     }
+  }
+
+  void _showRefineSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Refine & Regenerate',
+                style: GoogleFonts.inter(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tell the AI what to improve — get 3 fresh options',
+                style: GoogleFonts.inter(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _refineCtrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText:
+                      'e.g. "make it shorter", "add more emojis", "focus on the tech stack"',
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _regenerate();
+                  },
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 16),
+                  label: const Text('Regenerate 3 Options'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.accentPurple,
+                    foregroundColor: AppColors.background,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Preview'),
+        title: const Text('Choose Your Post'),
         actions: [
-          // Copy button
           Tooltip(
             message: 'Copy to clipboard',
             child: IconButton(
@@ -115,7 +232,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
               icon: const Icon(Icons.copy_outlined, size: 20),
             ),
           ),
-          // Share button
           Tooltip(
             message: 'Share post',
             child: IconButton(
@@ -129,166 +245,273 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
       body:
           _isRegenerating
               ? const Center(
-                child: ShimmerLoader(label: 'Refining your post...'),
+                child: ShimmerLoader(label: 'Generating 3 new options...'),
               )
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Project header
-                    _ProjectHeader(draft: widget.draft),
+              : Column(
+                children: [
+                  // Option tabs
+                  _OptionTabs(
+                    count: _posts.length,
+                    selected: _currentIndex,
+                    onTap: (i) {
+                      setState(() => _currentIndex = i);
+                      _pageCtrl.animateToPage(
+                        i,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                  ),
 
-                    const SizedBox(height: 16),
-
-                    // Post preview card
-                    PostPreviewCard(
-                      platform: _post.platform,
-                      content: _post.content,
+                  // Swipeable post pages
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageCtrl,
+                      itemCount: _posts.length,
+                      onPageChanged: (i) => setState(() => _currentIndex = i),
+                      itemBuilder:
+                          (context, i) => _PostPage(
+                            draft: widget.draft,
+                            post: _posts[i],
+                          ),
                     ),
+                  ),
 
-                    const SizedBox(height: 16),
-
-                    // Screenshots (if any)
-                    if (widget.draft.imagePaths.isNotEmpty) ...[
-                      Text(
-                        'Project Screenshots',
-                        style: GoogleFonts.inter(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 120,
-                        child: ListView(
-                          scrollDirection: Axis.horizontal,
-                          children:
-                              widget.draft.imagePaths
-                                  .map(
-                                    (p) => Container(
-                                      width: 160,
-                                      margin: const EdgeInsets.only(right: 10),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: AppColors.border,
-                                        ),
-                                        image: DecorationImage(
-                                          image: FileImage(File(p)),
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-
-                    // Action buttons row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _copyToClipboard,
-                            icon: const Icon(Icons.copy_all_rounded, size: 16),
-                            label: const Text('Copy'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.accent,
-                              side: const BorderSide(color: AppColors.accent),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: _share,
-                            icon: const Icon(Icons.ios_share_rounded, size: 16),
-                            label: const Text('Share'),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: AppColors.accent,
-                              foregroundColor: AppColors.background,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Regenerate section
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Refine & Regenerate',
-                            style: GoogleFonts.inter(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _refineCtrl,
-                            decoration: const InputDecoration(
-                              hintText:
-                                  'Optional: tell AI what to improve (e.g. "make it shorter", "add more emojis")',
-                            ),
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: _isRegenerating ? null : _regenerate,
-                              icon: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 16,
-                              ),
-                              label: const Text('Regenerate'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.accentPurple,
-                                side: const BorderSide(
-                                  color: AppColors.accentPurple,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 11,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
-                ),
+                  // Bottom action bar
+                  _BottomActions(
+                    onCopy: _copyToClipboard,
+                    onShare: _share,
+                    onSave: _saveToHistory,
+                    onRefine: _showRefineSheet,
+                  ),
+                ],
               ),
     );
   }
 }
+
+// ── Option selector tabs ──────────────────────────────────────────────────────
+
+class _OptionTabs extends StatelessWidget {
+  final int count;
+  final int selected;
+  final void Function(int) onTap;
+
+  const _OptionTabs({
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.border)),
+      ),
+      child: Row(
+        children: List.generate(count, (i) {
+          final isSelected = i == selected;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onTap(i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: EdgeInsets.only(right: i < count - 1 ? 8 : 0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color:
+                      isSelected
+                          ? AppColors.accent.withOpacity(0.15)
+                          : AppColors.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isSelected ? AppColors.accent : AppColors.border,
+                    width: isSelected ? 1.5 : 1,
+                  ),
+                ),
+                child: Text(
+                  'Option ${i + 1}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    color:
+                        isSelected ? AppColors.accent : AppColors.textMuted,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ── Single post page ──────────────────────────────────────────────────────────
+
+class _PostPage extends StatelessWidget {
+  final ProjectDraft draft;
+  final GeneratedPost post;
+
+  const _PostPage({required this.draft, required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ProjectHeader(draft: draft),
+          const SizedBox(height: 16),
+          PostPreviewCard(platform: post.platform, content: post.content),
+          if (draft.imagePaths.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Project Screenshots',
+              style: GoogleFonts.inter(
+                color: AppColors.textMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 120,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children:
+                    draft.imagePaths
+                        .map(
+                          (p) => Container(
+                            width: 160,
+                            margin: const EdgeInsets.only(right: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: AppColors.border),
+                              image: DecorationImage(
+                                image: FileImage(File(p)),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        )
+                        .toList(),
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Bottom action bar ─────────────────────────────────────────────────────────
+
+class _BottomActions extends StatelessWidget {
+  final VoidCallback onCopy;
+  final VoidCallback onShare;
+  final VoidCallback onSave;
+  final VoidCallback onRefine;
+
+  const _BottomActions({
+    required this.onCopy,
+    required this.onShare,
+    required this.onSave,
+    required this.onRefine,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      decoration: const BoxDecoration(
+        color: AppColors.surface,
+        border: Border(top: BorderSide(color: AppColors.border)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: onSave,
+              icon: const Icon(Icons.bookmark_add_rounded, size: 17),
+              label: const Text('Save to History'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: AppColors.background,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onCopy,
+                  icon: const Icon(Icons.copy_all_rounded, size: 15),
+                  label: const Text('Copy'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onShare,
+                  icon: const Icon(Icons.ios_share_rounded, size: 15),
+                  label: const Text('Share'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textPrimary,
+                    side: const BorderSide(color: AppColors.border),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onRefine,
+                  icon: const Icon(Icons.auto_awesome_rounded, size: 15),
+                  label: const Text('Refine'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.accentPurple,
+                    side: const BorderSide(color: AppColors.accentPurple),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Shared widgets ────────────────────────────────────────────────────────────
 
 class _ProjectHeader extends StatelessWidget {
   final ProjectDraft draft;
@@ -296,33 +519,24 @@ class _ProjectHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                draft.title.isEmpty ? 'Untitled Project' : draft.title,
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  _Badge(
-                    label: draft.platform.toUpperCase(),
-                    color: AppColors.accent,
-                  ),
-                  const SizedBox(width: 6),
-                  _Badge(label: draft.tone, color: AppColors.accentPurple),
-                ],
-              ),
-            ],
+        Text(
+          draft.title.isEmpty ? 'Untitled Project' : draft.title,
+          style: GoogleFonts.inter(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            _Badge(label: draft.platform.toUpperCase(), color: AppColors.accent),
+            const SizedBox(width: 6),
+            _Badge(label: draft.tone, color: AppColors.accentPurple),
+          ],
         ),
       ],
     );

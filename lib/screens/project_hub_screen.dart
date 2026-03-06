@@ -6,6 +6,7 @@ import '../models/project_draft.dart';
 import '../theme/app_colors.dart';
 import 'composer_screen.dart';
 import 'resume_projects_screen.dart';
+import 'history_screen.dart';
 
 class ProjectHubScreen extends ConsumerWidget {
   const ProjectHubScreen({super.key});
@@ -38,6 +39,11 @@ class ProjectHubScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          IconButton(
+            onPressed: () => _openHistory(context),
+            icon: const Icon(Icons.history_rounded, size: 22),
+            tooltip: 'History',
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Container(
@@ -50,7 +56,7 @@ class ProjectHubScreen extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                'Gemini 1.5 Flash',
+                'Gemini 2.5 Flash',
                 style: GoogleFonts.jetBrainsMono(
                   color: AppColors.accentGreen,
                   fontSize: 11,
@@ -112,6 +118,12 @@ class ProjectHubScreen extends ConsumerWidget {
   void _openResumeProjects(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const ResumeProjectsScreen()),
+    );
+  }
+
+  void _openHistory(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HistoryScreen()),
     );
   }
 }

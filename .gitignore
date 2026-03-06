@@ -46,3 +46,6 @@ app.*.map.json
 
 # API Keys
 lib/env/env.dart
+
+# Claude
+.claude/

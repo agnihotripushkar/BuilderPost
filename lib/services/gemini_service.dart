@@ -20,6 +20,7 @@ class GeminiService {
     required String tone,
     List<String> imagePaths = const [],
     String? readmeContent,
+    String? projectUrl,
   }) async {
     final platformPrompt = _platformPrompt(platform);
     final toneLabel = _toneLabel(tone);
@@ -33,7 +34,7 @@ Tone: $toneLabel
 
 Project Description:
 $description
-${readmeContent != null ? '\nProject README / Context:\n$readmeContent' : ''}
+${projectUrl != null ? '\nProject Link: $projectUrl' : ''}${readmeContent != null ? '\nProject README / Context:\n$readmeContent' : ''}
 
 Guidelines:
 - Make it authentic, engaging, and platform-native.

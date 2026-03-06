@@ -5,7 +5,7 @@ class ProjectDraft {
   final String id;
   final String title;
   final String description;
-  final String githubUrl;
+  final String projectUrl;
   final List<String> imagePaths;
   final String platform; // 'peerlist' | 'linkedin' | 'x'
   final String tone; // 'witty' | 'professional' | 'academic' | 'casual'
@@ -15,7 +15,7 @@ class ProjectDraft {
     required this.id,
     required this.title,
     required this.description,
-    this.githubUrl = '',
+    this.projectUrl = '',
     this.imagePaths = const [],
     this.platform = 'peerlist',
     this.tone = 'professional',
@@ -25,7 +25,7 @@ class ProjectDraft {
   factory ProjectDraft.create({
     required String title,
     required String description,
-    String githubUrl = '',
+    String projectUrl = '',
     List<String> imagePaths = const [],
     String platform = 'peerlist',
     String tone = 'professional',
@@ -34,7 +34,7 @@ class ProjectDraft {
       id: const Uuid().v4(),
       title: title,
       description: description,
-      githubUrl: githubUrl,
+      projectUrl: projectUrl,
       imagePaths: imagePaths,
       platform: platform,
       tone: tone,
@@ -45,7 +45,7 @@ class ProjectDraft {
   ProjectDraft copyWith({
     String? title,
     String? description,
-    String? githubUrl,
+    String? projectUrl,
     List<String>? imagePaths,
     String? platform,
     String? tone,
@@ -54,7 +54,7 @@ class ProjectDraft {
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
-      githubUrl: githubUrl ?? this.githubUrl,
+      projectUrl: projectUrl ?? this.projectUrl,
       imagePaths: imagePaths ?? this.imagePaths,
       platform: platform ?? this.platform,
       tone: tone ?? this.tone,
@@ -66,7 +66,7 @@ class ProjectDraft {
     'id': id,
     'title': title,
     'description': description,
-    'githubUrl': githubUrl,
+    'projectUrl': projectUrl,
     'imagePaths': imagePaths,
     'platform': platform,
     'tone': tone,
@@ -77,7 +77,7 @@ class ProjectDraft {
     id: json['id'] as String,
     title: json['title'] as String,
     description: json['description'] as String,
-    githubUrl: (json['githubUrl'] as String?) ?? '',
+    projectUrl: (json['projectUrl'] as String?) ?? '',
     imagePaths: List<String>.from(json['imagePaths'] as List),
     platform: (json['platform'] as String?) ?? 'peerlist',
     tone: (json['tone'] as String?) ?? 'professional',
