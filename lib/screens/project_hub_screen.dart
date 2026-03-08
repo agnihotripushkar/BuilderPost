@@ -7,6 +7,7 @@ import '../theme/app_colors.dart';
 import 'composer_screen.dart';
 import 'resume_projects_screen.dart';
 import 'history_screen.dart';
+import 'api_key_screen.dart';
 
 class ProjectHubScreen extends ConsumerWidget {
   const ProjectHubScreen({super.key});
@@ -43,6 +44,11 @@ class ProjectHubScreen extends ConsumerWidget {
             onPressed: () => _openHistory(context),
             icon: const Icon(Icons.history_rounded, size: 22),
             tooltip: 'History',
+          ),
+          IconButton(
+            onPressed: () => _openSettings(context),
+            icon: const Icon(Icons.settings_outlined, size: 22),
+            tooltip: 'API Key Settings',
           ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -124,6 +130,14 @@ class ProjectHubScreen extends ConsumerWidget {
   void _openHistory(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const HistoryScreen()),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ApiKeyScreen(isUpdateMode: true),
+      ),
     );
   }
 }

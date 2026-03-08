@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'screens/project_hub_screen.dart';
+import 'screens/api_key_screen.dart';
+import 'services/key_storage_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -14,11 +16,13 @@ void main() {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const ProviderScope(child: BuilderPostApp()));
+  final hasKey = await KeyStorageService.getKey() != null;
+  runApp(ProviderScope(child: BuilderPostApp(hasKey: hasKey)));
 }
 
 class BuilderPostApp extends StatelessWidget {
-  const BuilderPostApp({super.key});
+  final bool hasKey;
+  const BuilderPostApp({super.key, required this.hasKey});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +30,7 @@ class BuilderPostApp extends StatelessWidget {
       title: 'BuilderPost AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const ProjectHubScreen(),
+      home: hasKey ? const ProjectHubScreen() : const ApiKeyScreen(),
     );
   }
 }

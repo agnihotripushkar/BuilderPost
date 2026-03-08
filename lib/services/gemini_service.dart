@@ -2,15 +2,14 @@ import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import '../models/extracted_project.dart';
-import '../env/env.dart';
 
 class GeminiService {
   late final GenerativeModel _model;
 
-  GeminiService() {
+  GeminiService(String apiKey) {
     _model = GenerativeModel(
       model: 'gemini-2.5-flash',
-      apiKey: Env.geminiApiKey,
+      apiKey: apiKey,
     );
   }
 
