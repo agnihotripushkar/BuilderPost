@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import 'project_hub_screen.dart';
 
 class ApiKeyScreen extends StatefulWidget {
@@ -56,9 +57,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
     if (widget.isUpdateMode) {
       Navigator.of(context).pop();
     } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ProjectHubScreen()),
-      );
+      Navigator.of(context).pushReplacement(AppRouter.fade(const ProjectHubScreen()));
     }
   }
 
@@ -66,7 +65,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
     await KeyStorageService.deleteKey();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const ApiKeyScreen()),
+      AppRouter.fade(const ApiKeyScreen()),
       (_) => false,
     );
   }

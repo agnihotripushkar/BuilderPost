@@ -7,6 +7,7 @@ import '../models/project_draft.dart';
 import '../services/gemini_service.dart';
 import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import 'composer_screen.dart';
 
 class ResumeProjectsScreen extends StatefulWidget {
@@ -69,7 +70,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
     );
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => ComposerScreen(existingDraft: draft)),
+      AppRouter.scale(ComposerScreen(existingDraft: draft)),
     );
   }
 

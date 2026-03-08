@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../providers/drafts_provider.dart';
 import '../models/project_draft.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import 'composer_screen.dart';
 import 'resume_projects_screen.dart';
 import 'history_screen.dart';
@@ -73,23 +74,22 @@ class ProjectHubScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body:
-          drafts.isEmpty
-              ? _EmptyState(onNew: () => _openComposer(context))
-              : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: drafts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder:
-                    (context, i) => _DraftCard(
-                      draft: drafts[i],
-                      onTap: () => _openComposer(context, draft: drafts[i]),
-                      onDelete:
-                          () => ref
-                              .read(draftsProvider.notifier)
-                              .deleteDraft(drafts[i].id),
-                    ),
+      body: drafts.isEmpty
+          ? _EmptyState(onNew: () => _openComposer(context))
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: drafts.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, i) => _StaggeredCard(
+                index: i,
+                child: _DraftCard(
+                  draft: drafts[i],
+                  onTap: () => _openComposer(context, draft: drafts[i]),
+                  onDelete: () =>
+                      ref.read(draftsProvider.notifier).deleteDraft(drafts[i].id),
+                ),
               ),
+            ),
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -116,35 +116,112 @@ class ProjectHubScreen extends ConsumerWidget {
   }
 
   void _openComposer(BuildContext context, {ProjectDraft? draft}) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => ComposerScreen(existingDraft: draft)),
-    );
+    Navigator.of(context).push(AppRouter.scale(ComposerScreen(existingDraft: draft)));
   }
 
   void _openResumeProjects(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ResumeProjectsScreen()),
-    );
+    Navigator.of(context).push(AppRouter.slide(const ResumeProjectsScreen()));
   }
 
   void _openHistory(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const HistoryScreen()),
-    );
+    Navigator.of(context).push(AppRouter.slide(const HistoryScreen()));
   }
 
   void _openSettings(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const ApiKeyScreen(isUpdateMode: true),
-      ),
+      AppRouter.slide(const ApiKeyScreen(isUpdateMode: true)),
     );
   }
 }
 
-class _EmptyState extends StatelessWidget {
+// ─── Staggered entrance animation for each draft card ───────────────────────
+
+class _StaggeredCard extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _StaggeredCard({required this.index, required this.child});
+
+  @override
+  State<_StaggeredCard> createState() => _StaggeredCardState();
+}
+
+class _StaggeredCardState extends State<_StaggeredCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+
+    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
+    );
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.07),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    // Stagger: each card waits (index * 55ms) before animating
+    Future.delayed(Duration(milliseconds: widget.index * 55), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(position: _slide, child: widget.child),
+    );
+  }
+}
+
+// ─── Empty state with pulsing ⚡ icon ────────────────────────────────────────
+
+class _EmptyState extends StatefulWidget {
   final VoidCallback onNew;
   const _EmptyState({required this.onNew});
+
+  @override
+  State<_EmptyState> createState() => _EmptyStateState();
+}
+
+class _EmptyStateState extends State<_EmptyState>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _pulse;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+
+    _pulse = Tween<double>(begin: 1.0, end: 1.07).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,16 +229,20 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 90,
-            height: 90,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Center(
-              child: Text('⚡', style: TextStyle(fontSize: 38)),
+          // Pulsing ⚡ badge
+          ScaleTransition(
+            scale: _pulse,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceElevated,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Center(
+                child: Text('⚡', style: TextStyle(fontSize: 38)),
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -185,7 +266,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           FilledButton.icon(
-            onPressed: onNew,
+            onPressed: widget.onNew,
             icon: const Icon(Icons.add_rounded),
             label: const Text('Create Post'),
             style: FilledButton.styleFrom(
@@ -201,7 +282,7 @@ class _EmptyState extends StatelessWidget {
           TextButton.icon(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const ResumeProjectsScreen()),
+                AppRouter.slide(const ResumeProjectsScreen()),
               );
             },
             icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
@@ -215,6 +296,8 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+
+// ─── Draft card ──────────────────────────────────────────────────────────────
 
 class _DraftCard extends StatelessWidget {
   final ProjectDraft draft;
