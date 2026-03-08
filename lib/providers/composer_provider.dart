@@ -9,26 +9,26 @@ enum ComposerStatus { idle, fetchingReadme, generating, done, error }
 class ComposerState {
   final ProjectDraft draft;
   final ComposerStatus status;
-  final GeneratedPost? generatedPost;
+  final List<GeneratedPost>? generatedPosts;
   final String? errorMessage;
 
   const ComposerState({
     required this.draft,
     this.status = ComposerStatus.idle,
-    this.generatedPost,
+    this.generatedPosts,
     this.errorMessage,
   });
 
   ComposerState copyWith({
     ProjectDraft? draft,
     ComposerStatus? status,
-    GeneratedPost? generatedPost,
+    List<GeneratedPost>? generatedPosts,
     String? errorMessage,
   }) {
     return ComposerState(
       draft: draft ?? this.draft,
       status: status ?? this.status,
-      generatedPost: generatedPost ?? this.generatedPost,
+      generatedPosts: generatedPosts ?? this.generatedPosts,
       errorMessage: errorMessage,
     );
   }
@@ -54,8 +54,8 @@ class ComposerNotifier extends StateNotifier<ComposerState> {
   void updateDescription(String v) =>
       state = state.copyWith(draft: state.draft.copyWith(description: v));
 
-  void updateGithubUrl(String v) =>
-      state = state.copyWith(draft: state.draft.copyWith(githubUrl: v));
+  void updateProjectUrl(String v) =>
+      state = state.copyWith(draft: state.draft.copyWith(projectUrl: v));
 
   void updatePlatform(String v) =>
       state = state.copyWith(draft: state.draft.copyWith(platform: v));
@@ -82,33 +82,46 @@ class ComposerNotifier extends StateNotifier<ComposerState> {
     state = state.copyWith(status: ComposerStatus.generating);
 
     String? readmeContent;
+    final url = state.draft.projectUrl;
 
-    // Fetch GitHub README if URL provided
-    if (state.draft.githubUrl.isNotEmpty) {
+    // Fetch GitHub README only if it's a GitHub URL
+    if (url.isNotEmpty && url.contains('github.com')) {
       state = state.copyWith(status: ComposerStatus.fetchingReadme);
-      readmeContent = await _github.fetchReadme(state.draft.githubUrl);
+      readmeContent = await _github.fetchReadme(url);
     }
 
     state = state.copyWith(status: ComposerStatus.generating);
 
     try {
-      final content = await _gemini.generatePost(
-        description: state.draft.description,
-        platform: state.draft.platform,
-        tone: state.draft.tone,
-        imagePaths: state.draft.imagePaths,
-        readmeContent: readmeContent,
+      // Generate 3 variations in parallel
+      final results = await Future.wait(
+        List.generate(
+          3,
+          (_) => _gemini.generatePost(
+            description: state.draft.description,
+            platform: state.draft.platform,
+            tone: state.draft.tone,
+            imagePaths: state.draft.imagePaths,
+            readmeContent: readmeContent,
+            projectUrl: url.isNotEmpty ? url : null,
+          ),
+        ),
       );
 
-      final post = GeneratedPost.create(
-        draftId: state.draft.id,
-        platform: state.draft.platform,
-        content: content,
-      );
+      final posts =
+          results
+              .map(
+                (content) => GeneratedPost.create(
+                  draftId: state.draft.id,
+                  platform: state.draft.platform,
+                  content: content,
+                ),
+              )
+              .toList();
 
       state = state.copyWith(
         status: ComposerStatus.done,
-        generatedPost: post,
+        generatedPosts: posts,
         errorMessage: null,
       );
     } catch (e) {

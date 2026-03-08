@@ -35,10 +35,10 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         final d = widget.existingDraft!;
         _titleCtrl.text = d.title;
         _descCtrl.text = d.description;
-        _urlCtrl.text = d.githubUrl;
+        _urlCtrl.text = d.projectUrl;
         notifier.updateTitle(d.title);
         notifier.updateDescription(d.description);
-        notifier.updateGithubUrl(d.githubUrl);
+        notifier.updateProjectUrl(d.projectUrl);
         notifier.updatePlatform(d.platform);
         notifier.updateTone(d.tone);
       }
@@ -54,8 +54,12 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
   }
 
   Future<void> _pickImage() async {
-    final xFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (xFile != null) {
+    final current = ref.read(composerProvider).draft.imagePaths.length;
+    final remaining = 3 - current;
+    if (remaining <= 0) return;
+
+    final xFiles = await _picker.pickMultiImage(limit: remaining);
+    for (final xFile in xFiles) {
       ref.read(composerProvider.notifier).addImage(xFile.path);
     }
   }
@@ -75,7 +79,9 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
     await ref.read(composerProvider.notifier).generate();
 
     final state = ref.read(composerProvider);
-    if (state.status == ComposerStatus.done && state.generatedPost != null) {
+    if (state.status == ComposerStatus.done &&
+        state.generatedPosts != null &&
+        state.generatedPosts!.isNotEmpty) {
       // Save to drafts
       final draft = state.draft.copyWith(
         title:
@@ -89,7 +95,8 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         Navigator.of(context).push(
           MaterialPageRoute(
             builder:
-                (_) => PreviewScreen(draft: draft, post: state.generatedPost!),
+                (_) =>
+                    PreviewScreen(draft: draft, posts: state.generatedPosts!),
           ),
         );
       }
@@ -155,15 +162,18 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
 
             const SizedBox(height: 16),
 
-            // Section: GitHub URL
-            _SectionLabel(label: '🔗  GitHub README URL (optional)'),
+            // Section: Project Link
+            _SectionLabel(
+              label: '🔗  Project Link (optional)',
+              sub: 'GitHub repo, deployed app, Play Store, or any sharable URL',
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: _urlCtrl,
-              onChanged: ref.read(composerProvider.notifier).updateGithubUrl,
+              onChanged: ref.read(composerProvider.notifier).updateProjectUrl,
               keyboardType: TextInputType.url,
               decoration: const InputDecoration(
-                hintText: 'https://github.com/username/repo',
+                hintText: 'https://...',
                 prefixIcon: Icon(
                   Icons.link_rounded,
                   color: AppColors.textMuted,
@@ -229,8 +239,8 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
                   isLoading
                       ? (state.status == ComposerStatus.fetchingReadme
                           ? 'Fetching README...'
-                          : 'Generating...')
-                      : 'Generate Post',
+                          : 'Generating 3 options...')
+                      : 'Generate 3 Options',
                   style: GoogleFonts.inter(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,

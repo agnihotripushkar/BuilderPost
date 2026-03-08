@@ -4,7 +4,7 @@ Product Name: BuilderPost AI
 Objective: A mobile tool for developers to transform technical project descriptions into high-engagement social media posts (Peerlist, LinkedIn, X) using Multimodal AI.
 
 Core Functional Requirements
-Project Input: Users can manually enter text, paste a GitHub README URL, or upload a JSON/Markdown project file.
+Project Input: Users can manually enter text, paste a GitHub README URL, or upload a JSON/Markdown project file, or a PDF resume / LinkedIn profile.
 
 Multimodal Processing: Ability to upload 1-3 screenshots of the project. The AI should analyze the UI (e.g., "clean dark mode," "data-heavy dashboard") to include in the copy.
 

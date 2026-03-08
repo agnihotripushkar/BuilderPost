@@ -5,6 +5,8 @@ import '../providers/drafts_provider.dart';
 import '../models/project_draft.dart';
 import '../theme/app_colors.dart';
 import 'composer_screen.dart';
+import 'resume_projects_screen.dart';
+import 'history_screen.dart';
 
 class ProjectHubScreen extends ConsumerWidget {
   const ProjectHubScreen({super.key});
@@ -37,6 +39,11 @@ class ProjectHubScreen extends ConsumerWidget {
           ],
         ),
         actions: [
+          IconButton(
+            onPressed: () => _openHistory(context),
+            icon: const Icon(Icons.history_rounded, size: 22),
+            tooltip: 'History',
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Container(
@@ -49,7 +56,7 @@ class ProjectHubScreen extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                'Gemini 1.5 Flash',
+                'Gemini 2.5 Flash',
                 style: GoogleFonts.jetBrainsMono(
                   color: AppColors.accentGreen,
                   fontSize: 11,
@@ -77,12 +84,27 @@ class ProjectHubScreen extends ConsumerWidget {
                               .deleteDraft(drafts[i].id),
                     ),
               ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openComposer(context),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('New Post'),
-        backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.background,
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FloatingActionButton.small(
+            heroTag: 'resume_fab',
+            onPressed: () => _openResumeProjects(context),
+            backgroundColor: AppColors.surfaceElevated,
+            foregroundColor: AppColors.textPrimary,
+            tooltip: 'Import from Resume',
+            child: const Icon(Icons.picture_as_pdf_outlined),
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'new_post_fab',
+            onPressed: () => _openComposer(context),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('New Post'),
+            backgroundColor: AppColors.accent,
+            foregroundColor: AppColors.background,
+          ),
+        ],
       ),
     );
   }
@@ -90,6 +112,18 @@ class ProjectHubScreen extends ConsumerWidget {
   void _openComposer(BuildContext context, {ProjectDraft? draft}) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => ComposerScreen(existingDraft: draft)),
+    );
+  }
+
+  void _openResumeProjects(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ResumeProjectsScreen()),
+    );
+  }
+
+  void _openHistory(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const HistoryScreen()),
     );
   }
 }
@@ -147,6 +181,19 @@ class _EmptyState extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ResumeProjectsScreen()),
+              );
+            },
+            icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+            label: const Text('Import from Resume (PDF)'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.textMuted,
             ),
           ),
         ],
