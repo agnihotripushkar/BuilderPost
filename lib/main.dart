@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
-import 'screens/project_hub_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +26,7 @@ class BuilderPostApp extends StatelessWidget {
       title: 'BuilderPost AI',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const ProjectHubScreen(),
+      home: const SplashScreen(),
     );
   }
 }

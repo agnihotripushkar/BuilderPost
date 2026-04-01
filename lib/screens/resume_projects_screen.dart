@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/extracted_project.dart';
 import '../models/project_draft.dart';
 import '../services/gemini_service.dart';
+import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import 'composer_screen.dart';
 
 class ResumeProjectsScreen extends StatefulWidget {
@@ -16,8 +18,6 @@ class ResumeProjectsScreen extends StatefulWidget {
 }
 
 class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
-  final _geminiService = GeminiService();
-
   bool _isLoading = false;
   List<ExtractedProject> _projects = [];
   String? _error;
@@ -33,6 +33,12 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
         return; // User canceled
       }
 
+      final apiKey = await KeyStorageService.getKey();
+      if (apiKey == null) {
+        setState(() => _error = 'No API key found. Please add your Gemini API key in Settings.');
+        return;
+      }
+
       setState(() {
         _isLoading = true;
         _error = null;
@@ -40,7 +46,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
       });
 
       final path = result.files.single.path!;
-      final projects = await _geminiService.extractProjectsFromPdf(path);
+      final projects = await GeminiService(apiKey).extractProjectsFromPdf(path);
 
       setState(() {
         _isLoading = false;
@@ -64,7 +70,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
     );
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => ComposerScreen(existingDraft: draft)),
+      AppRouter.scale(ComposerScreen(existingDraft: draft)),
     );
   }
 

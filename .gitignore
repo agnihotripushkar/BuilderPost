@@ -44,8 +44,20 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# API Keys
+# API Keys & Secrets
 lib/env/env.dart
+.env
+.env.*
+*.env
+
+# Code Generation (build_runner)
+*.g.dart
+*.freezed.dart
+*.mocks.dart
+
+# Test coverage
+coverage/
+test/.test_coverage.dart
 
 # Claude
 .claude/

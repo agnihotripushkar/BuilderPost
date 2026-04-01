@@ -3,6 +3,7 @@ import '../models/project_draft.dart';
 import '../models/generated_post.dart';
 import '../services/gemini_service.dart';
 import '../services/github_service.dart';
+import '../services/key_storage_service.dart';
 
 enum ComposerStatus { idle, fetchingReadme, generating, done, error }
 
@@ -40,7 +41,6 @@ final composerProvider =
     );
 
 class ComposerNotifier extends StateNotifier<ComposerState> {
-  final _gemini = GeminiService();
   final _github = GithubService();
 
   ComposerNotifier()
@@ -79,6 +79,15 @@ class ComposerNotifier extends StateNotifier<ComposerState> {
   }
 
   Future<void> generate() async {
+    final apiKey = await KeyStorageService.getKey();
+    if (apiKey == null) {
+      state = state.copyWith(
+        status: ComposerStatus.error,
+        errorMessage: 'No API key found. Please add your Gemini API key in Settings.',
+      );
+      return;
+    }
+
     state = state.copyWith(status: ComposerStatus.generating);
 
     String? readmeContent;
@@ -92,12 +101,14 @@ class ComposerNotifier extends StateNotifier<ComposerState> {
 
     state = state.copyWith(status: ComposerStatus.generating);
 
+    final gemini = GeminiService(apiKey);
+
     try {
       // Generate 3 variations in parallel
       final results = await Future.wait(
         List.generate(
           3,
-          (_) => _gemini.generatePost(
+          (_) => gemini.generatePost(
             description: state.draft.description,
             platform: state.draft.platform,
             tone: state.draft.tone,
