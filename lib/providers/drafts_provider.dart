@@ -3,15 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/project_draft.dart';
 
 final draftsProvider =
-    StateNotifierProvider<DraftsNotifier, List<ProjectDraft>>(
-      (ref) => DraftsNotifier(),
-    );
+    NotifierProvider<DraftsNotifier, List<ProjectDraft>>(DraftsNotifier.new);
 
-class DraftsNotifier extends StateNotifier<List<ProjectDraft>> {
+class DraftsNotifier extends Notifier<List<ProjectDraft>> {
   static const _kKey = 'builder_post_drafts';
 
-  DraftsNotifier() : super([]) {
+  @override
+  List<ProjectDraft> build() {
     _load();
+    return [];
   }
 
   Future<void> _load() async {

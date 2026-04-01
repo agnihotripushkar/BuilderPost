@@ -1,23 +1,25 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/extracted_project.dart';
 import '../models/project_draft.dart';
+import '../providers/service_providers.dart';
 import '../services/gemini_service.dart';
-import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
 import 'composer_screen.dart';
 
-class ResumeProjectsScreen extends StatefulWidget {
+class ResumeProjectsScreen extends ConsumerStatefulWidget {
   const ResumeProjectsScreen({super.key});
 
   @override
-  State<ResumeProjectsScreen> createState() => _ResumeProjectsScreenState();
+  ConsumerState<ResumeProjectsScreen> createState() =>
+      _ResumeProjectsScreenState();
 }
 
-class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
+class _ResumeProjectsScreenState extends ConsumerState<ResumeProjectsScreen> {
   bool _isLoading = false;
   List<ExtractedProject> _projects = [];
   String? _error;
@@ -33,7 +35,7 @@ class _ResumeProjectsScreenState extends State<ResumeProjectsScreen> {
         return; // User canceled
       }
 
-      final apiKey = await KeyStorageService.getKey();
+      final apiKey = await ref.read(apiKeyProvider.future);
       if (apiKey == null) {
         setState(() => _error = 'No API key found. Please add your Gemini API key in Settings.');
         return;

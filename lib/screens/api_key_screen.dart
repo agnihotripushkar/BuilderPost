@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../providers/service_providers.dart';
 import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
 import 'project_hub_screen.dart';
 
-class ApiKeyScreen extends StatefulWidget {
+class ApiKeyScreen extends ConsumerStatefulWidget {
   /// When true, the screen is opened from Settings to update/clear an existing key.
   final bool isUpdateMode;
 
   const ApiKeyScreen({super.key, this.isUpdateMode = false});
 
   @override
-  State<ApiKeyScreen> createState() => _ApiKeyScreenState();
+  ConsumerState<ApiKeyScreen> createState() => _ApiKeyScreenState();
 }
 
-class _ApiKeyScreenState extends State<ApiKeyScreen> {
+class _ApiKeyScreenState extends ConsumerState<ApiKeyScreen> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
   bool _obscure = true;
@@ -50,6 +52,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
     });
 
     await KeyStorageService.saveKey(key);
+    ref.invalidate(apiKeyProvider);
 
     if (!mounted) return;
     setState(() => _saving = false);
@@ -63,6 +66,7 @@ class _ApiKeyScreenState extends State<ApiKeyScreen> {
 
   Future<void> _clearKey() async {
     await KeyStorageService.deleteKey();
+    ref.invalidate(apiKeyProvider);
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       AppRouter.fade(const ApiKeyScreen()),

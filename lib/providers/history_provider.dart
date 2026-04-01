@@ -3,15 +3,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/history_entry.dart';
 
 final historyProvider =
-    StateNotifierProvider<HistoryNotifier, List<HistoryEntry>>(
-      (ref) => HistoryNotifier(),
-    );
+    NotifierProvider<HistoryNotifier, List<HistoryEntry>>(HistoryNotifier.new);
 
-class HistoryNotifier extends StateNotifier<List<HistoryEntry>> {
+class HistoryNotifier extends Notifier<List<HistoryEntry>> {
   static const _kKey = 'builder_post_history';
 
-  HistoryNotifier() : super([]) {
+  @override
+  List<HistoryEntry> build() {
     _load();
+    return [];
   }
 
   Future<void> _load() async {
