@@ -20,18 +20,6 @@ Built for developers who want to share their work on Peerlist, LinkedIn, and X (
 
 ---
 
-## Screenshots
-
-<img width="1206" height="2622" alt="onboarding2" src="https://github.com/user-attachments/assets/45f08624-6854-48ee-93bf-29311f3f81c9" />
-<img width="1206" height="2622" alt="onboarding3" src="https://github.com/user-attachments/assets/acf23249-f161-481d-a910-4a8cbb45a490" />
-<img width="1206" height="2622" alt="composer" src="https://github.com/user-attachments/assets/ee0e2ebf-9e28-463a-bb63-245db6fa318f" />
-<img width="1080" height="2400" alt="importFromResume" src="https://github.com/user-attachments/assets/8beaf2a5-468b-484b-8b7c-3e7579e94e28" />
-<img width="1080" height="2400" alt="options" src="https://github.com/user-attachments/assets/073e45b4-9067-46aa-a955-060c5f3ae8b8" />
-<img width="1080" height="2400" alt="history" src="https://github.com/user-attachments/assets/d325b666-fe70-44e5-af51-4a4d1d7a2307" />
-
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
@@ -185,3 +173,17 @@ Pull requests are welcome. For major changes, open an issue first to discuss wha
 ## License
 
 MIT
+
+---
+
+## Screenshots
+
+<img width="1206" height="2622" alt="onboarding2" src="https://github.com/user-attachments/assets/45f08624-6854-48ee-93bf-29311f3f81c9" />
+<img width="1206" height="2622" alt="onboarding3" src="https://github.com/user-attachments/assets/acf23249-f161-481d-a910-4a8cbb45a490" />
+<img width="1206" height="2622" alt="composer" src="https://github.com/user-attachments/assets/ee0e2ebf-9e28-463a-bb63-245db6fa318f" />
+<img width="1080" height="2400" alt="importFromResume" src="https://github.com/user-attachments/assets/8beaf2a5-468b-484b-8b7c-3e7579e94e28" />
+<img width="1080" height="2400" alt="options" src="https://github.com/user-attachments/assets/073e45b4-9067-46aa-a955-060c5f3ae8b8" />
+<img width="1080" height="2400" alt="history" src="https://github.com/user-attachments/assets/d325b666-fe70-44e5-af51-4a4d1d7a2307" />
+
+
+---
