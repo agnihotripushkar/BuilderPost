@@ -22,7 +22,12 @@ Built for developers who want to share their work on Peerlist, LinkedIn, and X (
 
 ## Screenshots
 
-> Add screenshots here after first run (`assets/screenshots/`)
+<p float="left">
+  <img src="assets/screenshots/onboarding_1.png" width="22%" />
+  <img src="assets/screenshots/onboarding_2.png" width="22%" />
+  <img src="assets/screenshots/onboarding_3.png" width="22%" />
+  <img src="assets/screenshots/composer.png" width="22%" />
+</p>
 
 ---
 

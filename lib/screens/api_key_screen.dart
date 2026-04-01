@@ -127,7 +127,7 @@ class _ApiKeyScreenState extends ConsumerState<ApiKeyScreen> {
               action: TextButton.icon(
                 onPressed: _openAiStudio,
                 icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: const Text('Open AI Studio'),
+                label: const Text('Open Google AI Studio'),
                 style: TextButton.styleFrom(foregroundColor: c.accent, padding: EdgeInsets.zero),
               ),
             ),
