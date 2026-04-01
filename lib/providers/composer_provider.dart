@@ -146,13 +146,13 @@ class ComposerNotifier extends AutoDisposeNotifier<ComposerState> {
     String hint, {
     required String originalDescription,
   }) async {
-    if (hint.isNotEmpty) {
-      state = state.copyWith(
-        draft: state.draft.copyWith(
-          description: '$originalDescription\n\nUser refinement request: $hint',
-        ),
-      );
-    }
+    state = state.copyWith(
+      draft: state.draft.copyWith(
+        description: hint.isNotEmpty
+            ? '$originalDescription\n\nUser refinement request: $hint'
+            : originalDescription,
+      ),
+    );
     await generate();
   }
 
