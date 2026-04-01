@@ -27,18 +27,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final apiKey = await ref.read(apiKeyProvider.future);
 
     if (!mounted) return;
-    final next = apiKey != null
-        ? const ProjectHubScreen()
-        : const ApiKeyScreen();
+    final next = apiKey != null ? const ProjectHubScreen() : const ApiKeyScreen();
     Navigator.of(context).pushReplacement(AppRouter.fade(next));
   }
 
   void _next() {
     if (_currentPage < _pages.length - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeInOutCubic,
-      );
+      _pageController.nextPage(duration: const Duration(milliseconds: 380), curve: Curves.easeInOutCubic);
     } else {
       _finish();
     }
@@ -52,14 +47,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isLast = _currentPage == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: c.background,
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button — top right (hidden on last page)
             Align(
               alignment: Alignment.topRight,
               child: AnimatedOpacity(
@@ -69,20 +64,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   padding: const EdgeInsets.only(top: 12, right: 16),
                   child: TextButton(
                     onPressed: isLast ? null : _finish,
-                    child: Text(
-                      'Skip',
-                      style: GoogleFonts.inter(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                      ),
-                    ),
+                    child: Text('Skip', style: GoogleFonts.inter(color: c.textMuted, fontWeight: FontWeight.w500, fontSize: 14)),
                   ),
                 ),
               ),
             ),
-
-            // Pages
             Expanded(
               child: PageView(
                 controller: _pageController,
@@ -90,13 +76,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: _pages,
               ),
             ),
-
-            // Bottom bar: dots + button
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
               child: Column(
                 children: [
-                  // Dot indicators
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(_pages.length, (i) {
@@ -108,18 +91,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         width: active ? 22 : 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: active
-                              ? AppColors.accent
-                              : AppColors.textSubtle,
+                          color: active ? c.accent : c.textSubtle,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );
                     }),
                   ),
-
                   const SizedBox(height: 28),
-
-                  // Next / Get Started button
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     child: isLast
@@ -129,22 +107,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             child: FilledButton(
                               onPressed: _finish,
                               style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.accent,
-                                foregroundColor: AppColors.background,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 15,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                                backgroundColor: c.accent,
+                                foregroundColor: c.background,
+                                padding: const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: Text(
-                                'Get Started  ✦',
-                                style: GoogleFonts.inter(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              child: Text('Get Started  ✦', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 16)),
                             ),
                           )
                         : Row(
@@ -153,21 +121,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             children: [
                               FilledButton.icon(
                                 onPressed: _next,
-                                icon: const Icon(
-                                  Icons.arrow_forward_rounded,
-                                  size: 18,
-                                ),
+                                icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                                 label: const Text('Next'),
                                 style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.accent,
-                                  foregroundColor: AppColors.background,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 22,
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
+                                  backgroundColor: c.accent,
+                                  foregroundColor: c.background,
+                                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                 ),
                               ),
                             ],
@@ -183,7 +143,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 }
 
-// ─── Page 1: Turn Projects Into Viral Posts ─────────────────────────────────
+// ─── Page 1 ──────────────────────────────────────────────────────────────────
 
 class _Page1 extends StatefulWidget {
   const _Page1();
@@ -201,99 +161,52 @@ class _Page1State extends State<_Page1> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    )..forward();
-
-    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut),
-    );
-    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-    _slide = Tween<Offset>(
-      begin: const Offset(0, 0.2),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))..forward();
+    _scale = Tween<double>(begin: 0.6, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
+    _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.5, curve: Curves.easeOut)));
+    _slide = Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Animated icon
           ScaleTransition(
             scale: _scale,
             child: FadeTransition(
               opacity: _opacity,
               child: Container(
-                width: 110,
-                height: 110,
+                width: 110, height: 110,
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.12),
+                  color: c.accent.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: AppColors.accent.withOpacity(0.3),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accent.withOpacity(0.15),
-                      blurRadius: 40,
-                      spreadRadius: 5,
-                    ),
-                  ],
+                  border: Border.all(color: c.accent.withOpacity(0.3), width: 1.5),
+                  boxShadow: [BoxShadow(color: c.accent.withOpacity(0.15), blurRadius: 40, spreadRadius: 5)],
                 ),
-                child: const Center(
-                  child: Text('⚡', style: TextStyle(fontSize: 50)),
-                ),
+                child: const Center(child: Text('⚡', style: TextStyle(fontSize: 50))),
               ),
             ),
           ),
-
           const SizedBox(height: 40),
-
-          // Text content
           SlideTransition(
             position: _slide,
             child: FadeTransition(
               opacity: _opacity,
               child: Column(
                 children: [
-                  Text(
-                    'Turn Projects Into\nViral Posts',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      height: 1.25,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text('Turn Projects Into\nViral Posts', textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, color: c.textPrimary, height: 1.25, letterSpacing: -0.4)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Describe your project once.\nBuilderPost crafts platform-perfect\nposts for you instantly.',
+                  Text('Describe your project once.\nBuilderPost crafts platform-perfect\nposts for you instantly.',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: AppColors.textMuted,
-                      height: 1.6,
-                    ),
-                  ),
+                    style: GoogleFonts.inter(fontSize: 15, color: c.textMuted, height: 1.6)),
                 ],
               ),
             ),
@@ -304,7 +217,7 @@ class _Page1State extends State<_Page1> with SingleTickerProviderStateMixin {
   }
 }
 
-// ─── Page 2: 3 Platforms, One Tap ───────────────────────────────────────────
+// ─── Page 2 ──────────────────────────────────────────────────────────────────
 
 class _Page2 extends StatefulWidget {
   const _Page2();
@@ -319,63 +232,31 @@ class _Page2State extends State<_Page2> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..forward();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..forward();
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
-  Animation<double> _itemScale(int index) => Tween<double>(
-    begin: 0.4,
-    end: 1.0,
-  ).animate(
-    CurvedAnimation(
-      parent: _ctrl,
-      curve: Interval(
-        index * 0.15,
-        0.45 + index * 0.15,
-        curve: Curves.elasticOut,
-      ),
-    ),
-  );
+  Animation<double> _itemScale(int i) => Tween<double>(begin: 0.4, end: 1.0).animate(
+    CurvedAnimation(parent: _ctrl, curve: Interval(i * 0.15, 0.45 + i * 0.15, curve: Curves.elasticOut)));
 
-  Animation<double> _itemOpacity(int index) => Tween<double>(
-    begin: 0.0,
-    end: 1.0,
-  ).animate(
-    CurvedAnimation(
-      parent: _ctrl,
-      curve: Interval(index * 0.15, 0.35 + index * 0.1, curve: Curves.easeOut),
-    ),
-  );
+  Animation<double> _itemOpacity(int i) => Tween<double>(begin: 0.0, end: 1.0).animate(
+    CurvedAnimation(parent: _ctrl, curve: Interval(i * 0.15, 0.35 + i * 0.1, curve: Curves.easeOut)));
 
-  Animation<Offset> _textSlide() => Tween<Offset>(
-    begin: const Offset(0, 0.25),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(
-    parent: _ctrl,
-    curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic),
-  ));
+  Animation<Offset> _textSlide() => Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero).animate(
+    CurvedAnimation(parent: _ctrl, curve: const Interval(0.5, 1.0, curve: Curves.easeOutCubic)));
 
   Animation<double> _textOpacity() => Tween<double>(begin: 0.0, end: 1.0).animate(
-    CurvedAnimation(
-      parent: _ctrl,
-      curve: const Interval(0.45, 0.85, curve: Curves.easeOut),
-    ),
-  );
+    CurvedAnimation(parent: _ctrl, curve: const Interval(0.45, 0.85, curve: Curves.easeOut)));
 
   @override
   Widget build(BuildContext context) {
-    const platforms = [
+    final c = context.colors;
+    final platforms = [
       ('🟢', 'Peerlist', AppColors.peerlist),
       ('💼', 'LinkedIn', AppColors.linkedIn),
-      ('𝕏', 'X / Twitter', AppColors.xTwitter),
+      ('𝕏', 'X / Twitter', c.xTwitter),
     ];
 
     return Padding(
@@ -383,7 +264,6 @@ class _Page2State extends State<_Page2> with SingleTickerProviderStateMixin {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Staggered platform icons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(platforms.length, (i) {
@@ -399,31 +279,16 @@ class _Page2State extends State<_Page2> with SingleTickerProviderStateMixin {
                       child: Column(
                         children: [
                           Container(
-                            width: 72,
-                            height: 72,
+                            width: 72, height: 72,
                             decoration: BoxDecoration(
                               color: color.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(18),
-                              border: Border.all(
-                                color: color.withOpacity(0.35),
-                              ),
+                              border: Border.all(color: color.withOpacity(0.35)),
                             ),
-                            child: Center(
-                              child: Text(
-                                emoji,
-                                style: const TextStyle(fontSize: 30),
-                              ),
-                            ),
+                            child: Center(child: Text(emoji, style: const TextStyle(fontSize: 30))),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            label,
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              color: color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          Text(label, style: GoogleFonts.inter(fontSize: 11, color: color, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ),
@@ -432,37 +297,19 @@ class _Page2State extends State<_Page2> with SingleTickerProviderStateMixin {
               );
             }),
           ),
-
           const SizedBox(height: 44),
-
-          // Text
           SlideTransition(
             position: _textSlide(),
             child: FadeTransition(
               opacity: _textOpacity(),
               child: Column(
                 children: [
-                  Text(
-                    '3 Platforms, One Tap',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      height: 1.25,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text('3 Platforms, One Tap', textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, color: c.textPrimary, height: 1.25, letterSpacing: -0.4)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Generate tailored posts for Peerlist,\nLinkedIn, and X/Twitter — each\noptimized for that platform\'s audience.',
+                  Text("Generate tailored posts for Peerlist,\nLinkedIn, and X/Twitter — each\noptimized for that platform's audience.",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: AppColors.textMuted,
-                      height: 1.6,
-                    ),
-                  ),
+                    style: GoogleFonts.inter(fontSize: 15, color: c.textMuted, height: 1.6)),
                 ],
               ),
             ),
@@ -473,7 +320,7 @@ class _Page2State extends State<_Page2> with SingleTickerProviderStateMixin {
   }
 }
 
-// ─── Page 3: Your Key, Your Privacy ─────────────────────────────────────────
+// ─── Page 3 ──────────────────────────────────────────────────────────────────
 
 class _Page3 extends StatefulWidget {
   const _Page3();
@@ -484,136 +331,66 @@ class _Page3 extends StatefulWidget {
 
 class _Page3State extends State<_Page3> with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _iconScale;
-  late final Animation<double> _iconOpacity;
+  late final Animation<double> _iconScale, _iconOpacity, _textOpacity;
   late final Animation<Offset> _textSlide;
-  late final Animation<double> _textOpacity;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 750),
-    )..forward();
-
-    _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.0, 0.65, curve: Curves.elasticOut),
-      ),
-    );
-    _iconOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
-      ),
-    );
-    _textSlide = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.35, 1.0, curve: Curves.easeOutCubic),
-      ),
-    );
-    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _ctrl,
-        curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
-      ),
-    );
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 750))..forward();
+    _iconScale = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.65, curve: Curves.elasticOut)));
+    _iconOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.0, 0.4, curve: Curves.easeOut)));
+    _textSlide = Tween<Offset>(begin: const Offset(0, 0.25), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.35, 1.0, curve: Curves.easeOutCubic)));
+    _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _ctrl, curve: const Interval(0.3, 0.8, curve: Curves.easeOut)));
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Lock icon
           ScaleTransition(
             scale: _iconScale,
             child: FadeTransition(
               opacity: _iconOpacity,
               child: Container(
-                width: 110,
-                height: 110,
+                width: 110, height: 110,
                 decoration: BoxDecoration(
-                  color: AppColors.accentGreen.withOpacity(0.1),
+                  color: c.accentGreen.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(28),
-                  border: Border.all(
-                    color: AppColors.accentGreen.withOpacity(0.3),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accentGreen.withOpacity(0.12),
-                      blurRadius: 40,
-                      spreadRadius: 5,
-                    ),
-                  ],
+                  border: Border.all(color: c.accentGreen.withOpacity(0.3), width: 1.5),
+                  boxShadow: [BoxShadow(color: c.accentGreen.withOpacity(0.12), blurRadius: 40, spreadRadius: 5)],
                 ),
-                child: const Center(
-                  child: Text('🔐', style: TextStyle(fontSize: 48)),
-                ),
+                child: const Center(child: Text('🔐', style: TextStyle(fontSize: 48))),
               ),
             ),
           ),
-
           const SizedBox(height: 40),
-
           SlideTransition(
             position: _textSlide,
             child: FadeTransition(
               opacity: _textOpacity,
               child: Column(
                 children: [
-                  Text(
-                    'Your Key,\nYour Privacy',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                      height: 1.25,
-                      letterSpacing: -0.4,
-                    ),
-                  ),
+                  Text('Your Key,\nYour Privacy', textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(fontSize: 26, fontWeight: FontWeight.w700, color: c.textPrimary, height: 1.25, letterSpacing: -0.4)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Use your own free Gemini API key.\nIt\'s stored securely on your device\nand never shared with anyone.',
+                  Text("Use your own free Gemini API key.\nIt's stored securely on your device\nand never shared with anyone.",
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      color: AppColors.textMuted,
-                      height: 1.6,
-                    ),
-                  ),
+                    style: GoogleFonts.inter(fontSize: 15, color: c.textMuted, height: 1.6)),
                   const SizedBox(height: 24),
-                  // Feature chips
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _FeatureChip(
-                        icon: Icons.lock_outline_rounded,
-                        label: 'On-device only',
-                        color: AppColors.accentGreen,
-                      ),
+                      _FeatureChip(icon: Icons.lock_outline_rounded, label: 'On-device only', color: c.accentGreen),
                       const SizedBox(width: 10),
-                      _FeatureChip(
-                        icon: Icons.cloud_off_outlined,
-                        label: 'Never uploaded',
-                        color: AppColors.accent,
-                      ),
+                      _FeatureChip(icon: Icons.cloud_off_outlined, label: 'Never uploaded', color: c.accent),
                     ],
                   ),
                 ],
@@ -631,11 +408,7 @@ class _FeatureChip extends StatelessWidget {
   final String label;
   final Color color;
 
-  const _FeatureChip({
-    required this.icon,
-    required this.label,
-    required this.color,
-  });
+  const _FeatureChip({required this.icon, required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -651,14 +424,7 @@ class _FeatureChip extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 5),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(label, style: GoogleFonts.inter(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
         ],
       ),
     );

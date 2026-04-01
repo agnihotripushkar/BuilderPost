@@ -44,31 +44,21 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   GeneratedPost get _currentPost => _posts[_currentIndex];
 
   Future<void> _copyToClipboard() async {
+    final c = context.colors;
     await Clipboard.setData(ClipboardData(text: _currentPost.content));
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_outline_rounded,
-                color: AppColors.accentGreen,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Copied to clipboard!',
-                style: GoogleFonts.inter(color: AppColors.textPrimary),
-              ),
-            ],
-          ),
-          backgroundColor: AppColors.surfaceElevated,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline_rounded, color: c.accentGreen, size: 18),
+            const SizedBox(width: 8),
+            Text('Copied to clipboard!', style: GoogleFonts.inter(color: c.textPrimary)),
+          ],
         ),
-      );
+        backgroundColor: c.surfaceElevated,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
     }
   }
 
@@ -77,42 +67,30 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _saveToHistory() async {
+    final c = context.colors;
     await ref.read(composerProvider.notifier).saveToHistory(_currentIndex);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.bookmark_added_rounded,
-                color: AppColors.accentGreen,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Option ${_currentIndex + 1} saved to history!',
-                style: GoogleFonts.inter(color: AppColors.textPrimary),
-              ),
-            ],
-          ),
-          backgroundColor: AppColors.surfaceElevated,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.bookmark_added_rounded, color: c.accentGreen, size: 18),
+            const SizedBox(width: 8),
+            Text('Option ${_currentIndex + 1} saved to history!', style: GoogleFonts.inter(color: c.textPrimary)),
+          ],
         ),
-      );
+        backgroundColor: c.surfaceElevated,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
     }
   }
 
   Future<void> _regenerate() async {
     final refineHint = _refineCtrl.text.trim();
-
     await ref.read(composerProvider.notifier).regenerateWithHint(
       refineHint,
       originalDescription: widget.draft.description,
     );
-
     if (!mounted) return;
     final newPosts = ref.read(composerProvider).generatedPosts;
     if (newPosts != null && newPosts.isNotEmpty) {
@@ -126,48 +104,33 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   void _showRefineSheet() {
+    final c = context.colors;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: c.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) {
         return Padding(
           padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 20,
+            left: 16, right: 16, top: 20,
             bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Refine & Regenerate',
-                style: GoogleFonts.inter(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
+              Text('Refine & Regenerate', style: GoogleFonts.inter(color: c.textPrimary, fontWeight: FontWeight.w600, fontSize: 15)),
               const SizedBox(height: 4),
-              Text(
-                'Tell the AI what to improve — get 3 fresh options',
-                style: GoogleFonts.inter(
-                  color: AppColors.textMuted,
-                  fontSize: 12,
-                ),
-              ),
+              Text('Tell the AI what to improve — get 3 fresh options', style: GoogleFonts.inter(color: c.textMuted, fontSize: 12)),
               const SizedBox(height: 12),
               TextField(
                 controller: _refineCtrl,
                 autofocus: true,
                 decoration: const InputDecoration(
-                  hintText:
-                      'e.g. "make it shorter", "add more emojis", "focus on the tech stack"',
+                  hintText: 'e.g. "make it shorter", "add more emojis", "focus on the tech stack"',
                 ),
                 maxLines: 3,
               ),
@@ -182,12 +145,10 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                   icon: const Icon(Icons.auto_awesome_rounded, size: 16),
                   label: const Text('Regenerate 3 Options'),
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.accentPurple,
-                    foregroundColor: AppColors.background,
+                    backgroundColor: c.accentPurple,
+                    foregroundColor: c.background,
                     padding: const EdgeInsets.symmetric(vertical: 13),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
@@ -210,65 +171,38 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
         actions: [
           Tooltip(
             message: 'Copy to clipboard',
-            child: IconButton(
-              onPressed: isRegenerating ? null : _copyToClipboard,
-              icon: const Icon(Icons.copy_outlined, size: 20),
-            ),
+            child: IconButton(onPressed: isRegenerating ? null : _copyToClipboard, icon: const Icon(Icons.copy_outlined, size: 20)),
           ),
           Tooltip(
             message: 'Share post',
-            child: IconButton(
-              onPressed: isRegenerating ? null : _share,
-              icon: const Icon(Icons.share_outlined, size: 20),
-            ),
+            child: IconButton(onPressed: isRegenerating ? null : _share, icon: const Icon(Icons.share_outlined, size: 20)),
           ),
           const SizedBox(width: 4),
         ],
       ),
-      body:
-          isRegenerating
-              ? const Center(
-                child: ShimmerLoader(label: 'Generating 3 new options...'),
-              )
-              : Column(
-                children: [
-                  // Option tabs
-                  _OptionTabs(
-                    count: _posts.length,
-                    selected: _currentIndex,
-                    onTap: (i) {
-                      setState(() => _currentIndex = i);
-                      _pageCtrl.animateToPage(
-                        i,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
+      body: isRegenerating
+          ? const Center(child: ShimmerLoader(label: 'Generating 3 new options...'))
+          : Column(
+              children: [
+                _OptionTabs(
+                  count: _posts.length,
+                  selected: _currentIndex,
+                  onTap: (i) {
+                    setState(() => _currentIndex = i);
+                    _pageCtrl.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                  },
+                ),
+                Expanded(
+                  child: PageView.builder(
+                    controller: _pageCtrl,
+                    itemCount: _posts.length,
+                    onPageChanged: (i) => setState(() => _currentIndex = i),
+                    itemBuilder: (context, i) => _PostPage(draft: widget.draft, post: _posts[i]),
                   ),
-
-                  // Swipeable post pages
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageCtrl,
-                      itemCount: _posts.length,
-                      onPageChanged: (i) => setState(() => _currentIndex = i),
-                      itemBuilder:
-                          (context, i) => _PostPage(
-                            draft: widget.draft,
-                            post: _posts[i],
-                          ),
-                    ),
-                  ),
-
-                  // Bottom action bar
-                  _BottomActions(
-                    onCopy: _copyToClipboard,
-                    onShare: _share,
-                    onSave: _saveToHistory,
-                    onRefine: _showRefineSheet,
-                  ),
-                ],
-              ),
+                ),
+                _BottomActions(onCopy: _copyToClipboard, onShare: _share, onSave: _saveToHistory, onRefine: _showRefineSheet),
+              ],
+            ),
     );
   }
 }
@@ -280,19 +214,14 @@ class _OptionTabs extends StatelessWidget {
   final int selected;
   final void Function(int) onTap;
 
-  const _OptionTabs({
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
+  const _OptionTabs({required this.count, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
-      ),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: c.border))),
       child: Row(
         children: List.generate(count, (i) {
           final isSelected = i == selected;
@@ -304,24 +233,16 @@ class _OptionTabs extends StatelessWidget {
                 margin: EdgeInsets.only(right: i < count - 1 ? 8 : 0),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
-                  color:
-                      isSelected
-                          ? AppColors.accent.withOpacity(0.15)
-                          : AppColors.surface,
+                  color: isSelected ? c.accent.withOpacity(0.15) : c.surface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isSelected ? AppColors.accent : AppColors.border,
-                    width: isSelected ? 1.5 : 1,
-                  ),
+                  border: Border.all(color: isSelected ? c.accent : c.border, width: isSelected ? 1.5 : 1),
                 ),
                 child: Text(
                   'Option ${i + 1}',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
-                    color:
-                        isSelected ? AppColors.accent : AppColors.textMuted,
-                    fontWeight:
-                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? c.accent : c.textMuted,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                     fontSize: 13,
                   ),
                 ),
@@ -344,6 +265,7 @@ class _PostPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       child: Column(
@@ -354,36 +276,21 @@ class _PostPage extends StatelessWidget {
           PostPreviewCard(platform: post.platform, content: post.content),
           if (draft.imagePaths.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(
-              'Project Screenshots',
-              style: GoogleFonts.inter(
-                color: AppColors.textMuted,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+            Text('Project Screenshots', style: GoogleFonts.inter(color: c.textMuted, fontSize: 12, fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             SizedBox(
               height: 120,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children:
-                    draft.imagePaths
-                        .map(
-                          (p) => Container(
-                            width: 160,
-                            margin: const EdgeInsets.only(right: 10),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.border),
-                              image: DecorationImage(
-                                image: FileImage(File(p)),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                        )
-                        .toList(),
+                children: draft.imagePaths.map((p) => Container(
+                  width: 160,
+                  margin: const EdgeInsets.only(right: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: c.border),
+                    image: DecorationImage(image: FileImage(File(p)), fit: BoxFit.cover),
+                  ),
+                )).toList(),
               ),
             ),
           ],
@@ -402,20 +309,16 @@ class _BottomActions extends StatelessWidget {
   final VoidCallback onSave;
   final VoidCallback onRefine;
 
-  const _BottomActions({
-    required this.onCopy,
-    required this.onShare,
-    required this.onSave,
-    required this.onRefine,
-  });
+  const _BottomActions({required this.onCopy, required this.onShare, required this.onSave, required this.onRefine});
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        color: c.surface,
+        border: Border(top: BorderSide(color: c.border)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -428,11 +331,9 @@ class _BottomActions extends StatelessWidget {
               icon: const Icon(Icons.bookmark_add_rounded, size: 17),
               label: const Text('Save to History'),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: AppColors.background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                backgroundColor: c.accent,
+                foregroundColor: c.background,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
             ),
           ),
@@ -445,12 +346,10 @@ class _BottomActions extends StatelessWidget {
                   icon: const Icon(Icons.copy_all_rounded, size: 15),
                   label: const Text('Copy'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: c.textPrimary,
+                    side: BorderSide(color: c.border),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
@@ -461,12 +360,10 @@ class _BottomActions extends StatelessWidget {
                   icon: const Icon(Icons.ios_share_rounded, size: 15),
                   label: const Text('Share'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: c.textPrimary,
+                    side: BorderSide(color: c.border),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
@@ -477,12 +374,10 @@ class _BottomActions extends StatelessWidget {
                   icon: const Icon(Icons.auto_awesome_rounded, size: 15),
                   label: const Text('Refine'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accentPurple,
-                    side: const BorderSide(color: AppColors.accentPurple),
+                    foregroundColor: c.accentPurple,
+                    side: BorderSide(color: c.accentPurple),
                     padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                 ),
               ),
@@ -502,23 +397,20 @@ class _ProjectHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           draft.title.isEmpty ? 'Untitled Project' : draft.title,
-          style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w700,
-            fontSize: 18,
-          ),
+          style: GoogleFonts.inter(color: c.textPrimary, fontWeight: FontWeight.w700, fontSize: 18),
         ),
         const SizedBox(height: 4),
         Row(
           children: [
-            _Badge(label: draft.platform.toUpperCase(), color: AppColors.accent),
+            _Badge(label: draft.platform.toUpperCase(), color: c.accent),
             const SizedBox(width: 6),
-            _Badge(label: draft.tone, color: AppColors.accentPurple),
+            _Badge(label: draft.tone, color: c.accentPurple),
           ],
         ),
       ],
@@ -540,15 +432,7 @@ class _Badge extends StatelessWidget {
         borderRadius: BorderRadius.circular(5),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.5,
-        ),
-      ),
+      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
     );
   }
 }

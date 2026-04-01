@@ -65,12 +65,13 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
   }
 
   Future<void> _generate() async {
+    final c = context.colors;
     final composer = ref.read(composerProvider);
     if (composer.draft.description.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please add a project description first.'),
-          backgroundColor: AppColors.accentOrange,
+        SnackBar(
+          content: const Text('Please add a project description first.'),
+          backgroundColor: c.accentOrange,
         ),
       );
       return;
@@ -82,22 +83,14 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
     if (state.status == ComposerStatus.done &&
         state.generatedPosts != null &&
         state.generatedPosts!.isNotEmpty) {
-      // Save to drafts
       final draft = state.draft.copyWith(
-        title:
-            _titleCtrl.text.trim().isEmpty
-                ? 'Untitled Project'
-                : _titleCtrl.text.trim(),
+        title: _titleCtrl.text.trim().isEmpty ? 'Untitled Project' : _titleCtrl.text.trim(),
       );
       ref.read(draftsProvider.notifier).addDraft(draft);
 
       if (mounted) {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder:
-                (_) =>
-                    PreviewScreen(draft: draft, posts: state.generatedPosts!),
-          ),
+          MaterialPageRoute(builder: (_) => PreviewScreen(draft: draft, posts: state.generatedPosts!)),
         );
       }
     } else if (state.status == ComposerStatus.error) {
@@ -105,7 +98,7 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(state.errorMessage ?? 'Generation failed.'),
-            backgroundColor: AppColors.accentOrange,
+            backgroundColor: context.colors.accentOrange,
           ),
         );
       }
@@ -114,9 +107,9 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final state = ref.watch(composerProvider);
-    final isLoading =
-        state.status == ComposerStatus.generating ||
+    final isLoading = state.status == ComposerStatus.generating ||
         state.status == ComposerStatus.fetchingReadme;
 
     return Scaffold(
@@ -134,19 +127,14 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section: Project Info
             _SectionLabel(label: '🗂  Project Info'),
             const SizedBox(height: 10),
             TextField(
               controller: _titleCtrl,
               onChanged: ref.read(composerProvider.notifier).updateTitle,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Project name (e.g. BuilderPost AI)',
-                prefixIcon: Icon(
-                  Icons.folder_outlined,
-                  color: AppColors.textMuted,
-                  size: 18,
-                ),
+                prefixIcon: Icon(Icons.folder_outlined, color: c.textMuted, size: 18),
               ),
             ),
             const SizedBox(height: 10),
@@ -155,14 +143,12 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
               onChanged: ref.read(composerProvider.notifier).updateDescription,
               maxLines: 5,
               decoration: const InputDecoration(
-                hintText:
-                    'Describe your project — what it does, your tech stack, challenges you solved...',
+                hintText: 'Describe your project — what it does, your tech stack, challenges you solved...',
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Section: Project Link
             _SectionLabel(
               label: '🔗  Project Link (optional)',
               sub: 'GitHub repo, deployed app, Play Store, or any sharable URL',
@@ -172,23 +158,15 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
               controller: _urlCtrl,
               onChanged: ref.read(composerProvider.notifier).updateProjectUrl,
               keyboardType: TextInputType.url,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'https://...',
-                prefixIcon: Icon(
-                  Icons.link_rounded,
-                  color: AppColors.textMuted,
-                  size: 18,
-                ),
+                prefixIcon: Icon(Icons.link_rounded, color: c.textMuted, size: 18),
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Section: Screenshots
-            _SectionLabel(
-              label: '🖼  Screenshots (up to 3)',
-              sub: 'AI analyzes your UI to improve the post copy',
-            ),
+            _SectionLabel(label: '🖼  Screenshots (up to 3)', sub: 'AI analyzes your UI to improve the post copy'),
             const SizedBox(height: 10),
             ImageUploadStrip(
               imagePaths: state.draft.imagePaths,
@@ -198,7 +176,6 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
 
             const SizedBox(height: 16),
 
-            // Section: Platform
             _SectionLabel(label: '📡  Target Platform'),
             const SizedBox(height: 10),
             PlatformChips(
@@ -208,7 +185,6 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
 
             const SizedBox(height: 16),
 
-            // Section: Tone
             _SectionLabel(label: '🎛  Tone'),
             const SizedBox(height: 10),
             ToneToggles(
@@ -218,43 +194,28 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
 
             const SizedBox(height: 28),
 
-            // Generate Button
             SizedBox(
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
                 onPressed: isLoading ? null : _generate,
-                icon:
-                    isLoading
-                        ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.background,
-                          ),
-                        )
-                        : const Icon(Icons.auto_awesome_rounded, size: 18),
+                icon: isLoading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: c.background),
+                      )
+                    : const Icon(Icons.auto_awesome_rounded, size: 18),
                 label: Text(
                   isLoading
-                      ? (state.status == ComposerStatus.fetchingReadme
-                          ? 'Fetching README...'
-                          : 'Generating 3 options...')
+                      ? (state.status == ComposerStatus.fetchingReadme ? 'Fetching README...' : 'Generating 3 options...')
                       : 'Generate 3 Options',
-                  style: GoogleFonts.inter(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                  ),
+                  style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),
                 ),
                 style: FilledButton.styleFrom(
-                  backgroundColor:
-                      isLoading
-                          ? AppColors.accent.withOpacity(0.5)
-                          : AppColors.accent,
-                  foregroundColor: AppColors.background,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  backgroundColor: isLoading ? c.accent.withOpacity(0.5) : c.accent,
+                  foregroundColor: c.background,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
             ),
@@ -274,24 +235,17 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 13,
-            letterSpacing: 0.3,
-          ),
+          style: GoogleFonts.inter(color: c.textPrimary, fontWeight: FontWeight.w600, fontSize: 13, letterSpacing: 0.3),
         ),
         if (sub != null) ...[
           const SizedBox(height: 2),
-          Text(
-            sub!,
-            style: GoogleFonts.inter(color: AppColors.textMuted, fontSize: 12),
-          ),
+          Text(sub!, style: GoogleFonts.inter(color: c.textMuted, fontSize: 12)),
         ],
       ],
     );

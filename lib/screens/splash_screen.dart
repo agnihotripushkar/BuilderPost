@@ -118,8 +118,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: c.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -139,9 +140,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         height: 110,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.accent.withOpacity(
-                            _glowOpacity.value,
-                          ),
+                          color: c.accent.withOpacity(_glowOpacity.value),
                         ),
                       ),
                     ),
@@ -152,12 +151,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.accent.withOpacity(0.12),
+                          color: c.accent.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(22),
-                          border: Border.all(
-                            color: AppColors.accent.withOpacity(0.35),
-                            width: 1.5,
-                          ),
+                          border: Border.all(color: c.accent.withOpacity(0.35), width: 1.5),
                         ),
                         child: const Center(
                           child: Text('⚡', style: TextStyle(fontSize: 36)),
@@ -181,7 +177,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   style: GoogleFonts.inter(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: c.textPrimary,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -197,7 +193,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                 'Share what you build',
                 style: GoogleFonts.inter(
                   fontSize: 15,
-                  color: AppColors.textMuted,
+                  color: c.textMuted,
                   fontWeight: FontWeight.w400,
                 ),
               ),

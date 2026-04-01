@@ -9,11 +9,48 @@ import '../theme/app_colors.dart';
 import '../widgets/post_preview_card.dart';
 
 class HistoryScreen extends ConsumerWidget {
-  const HistoryScreen({super.key});
+  final bool embedded;
+  const HistoryScreen({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final entries = ref.watch(historyProvider);
+
+    final body = entries.isEmpty
+        ? _EmptyState()
+        : ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: entries.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (context, i) => _HistoryCard(
+              entry: entries[i],
+              onDelete: () => ref.read(historyProvider.notifier).deleteEntry(entries[i].id),
+              onTap: () => _openDetail(context, entries[i]),
+            ),
+          );
+
+    if (embedded) {
+      return Column(
+        children: [
+          if (entries.isNotEmpty)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 8, 8, 0),
+                child: Tooltip(
+                  message: 'Clear all history',
+                  child: IconButton(
+                    icon: Icon(Icons.delete_sweep_outlined, size: 22, color: c.textMuted),
+                    onPressed: () => _confirmClearAll(context, ref),
+                  ),
+                ),
+              ),
+            ),
+          Expanded(child: body),
+        ],
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -30,23 +67,7 @@ class HistoryScreen extends ConsumerWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body:
-          entries.isEmpty
-              ? _EmptyState()
-              : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: entries.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder:
-                    (context, i) => _HistoryCard(
-                      entry: entries[i],
-                      onDelete:
-                          () => ref
-                              .read(historyProvider.notifier)
-                              .deleteEntry(entries[i].id),
-                      onTap: () => _openDetail(context, entries[i]),
-                    ),
-              ),
+      body: body,
     );
   }
 
@@ -57,42 +78,30 @@ class HistoryScreen extends ConsumerWidget {
   }
 
   void _confirmClearAll(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            backgroundColor: AppColors.surfaceElevated,
-            title: Text(
-              'Clear History',
-              style: GoogleFonts.inter(color: AppColors.textPrimary),
-            ),
-            content: Text(
-              'Delete all saved posts? This cannot be undone.',
-              style: GoogleFonts.inter(color: AppColors.textMuted),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: GoogleFonts.inter(color: AppColors.textMuted),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  final entries = ref.read(historyProvider);
-                  for (final e in entries) {
-                    ref.read(historyProvider.notifier).deleteEntry(e.id);
-                  }
-                },
-                child: Text(
-                  'Clear All',
-                  style: GoogleFonts.inter(color: AppColors.accentOrange),
-                ),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        backgroundColor: c.surfaceElevated,
+        title: Text('Clear History', style: GoogleFonts.inter(color: c.textPrimary)),
+        content: Text('Delete all saved posts? This cannot be undone.', style: GoogleFonts.inter(color: c.textMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: GoogleFonts.inter(color: c.textMuted)),
           ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final entries = ref.read(historyProvider);
+              for (final e in entries) {
+                ref.read(historyProvider.notifier).deleteEntry(e.id);
+              }
+            },
+            child: Text('Clear All', style: GoogleFonts.inter(color: c.accentOrange)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -104,31 +113,21 @@ class _HistoryCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onTap;
 
-  const _HistoryCard({
-    required this.entry,
-    required this.onDelete,
-    required this.onTap,
-  });
+  const _HistoryCard({required this.entry, required this.onDelete, required this.onTap});
 
-  Color get _platformColor {
+  Color _platformColor(AppColors c) {
     switch (entry.platform) {
-      case 'peerlist':
-        return AppColors.peerlist;
-      case 'linkedin':
-        return AppColors.linkedIn;
-      default:
-        return AppColors.xTwitter;
+      case 'peerlist': return AppColors.peerlist;
+      case 'linkedin': return AppColors.linkedIn;
+      default: return c.xTwitter;
     }
   }
 
   String get _platformEmoji {
     switch (entry.platform) {
-      case 'peerlist':
-        return '🟢';
-      case 'linkedin':
-        return '💼';
-      default:
-        return '𝕏';
+      case 'peerlist': return '🟢';
+      case 'linkedin': return '💼';
+      default: return '𝕏';
     }
   }
 
@@ -144,14 +143,17 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+    final platformColor = _platformColor(c);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: c.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -162,15 +164,10 @@ class _HistoryCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: _platformColor.withOpacity(0.12),
+                    color: platformColor.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Center(
-                    child: Text(
-                      _platformEmoji,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
+                  child: Center(child: Text(_platformEmoji, style: const TextStyle(fontSize: 16))),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -179,11 +176,7 @@ class _HistoryCard extends StatelessWidget {
                     children: [
                       Text(
                         entry.projectTitle,
-                        style: GoogleFonts.inter(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
+                        style: GoogleFonts.inter(color: c.textPrimary, fontWeight: FontWeight.w600, fontSize: 14),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -191,30 +184,20 @@ class _HistoryCard extends StatelessWidget {
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _platformColor.withOpacity(0.1),
+                              color: platformColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               entry.platform.toUpperCase(),
-                              style: TextStyle(
-                                color: _platformColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(color: platformColor, fontSize: 10, fontWeight: FontWeight.w600),
                             ),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '· ${entry.tone}  · ${_formatDate(entry.savedAt)}',
-                            style: GoogleFonts.inter(
-                              color: AppColors.textMuted,
-                              fontSize: 11,
-                            ),
+                            style: GoogleFonts.inter(color: c.textMuted, fontSize: 11),
                           ),
                         ],
                       ),
@@ -223,11 +206,7 @@ class _HistoryCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: const Icon(
-                    Icons.delete_outline_rounded,
-                    color: AppColors.textSubtle,
-                    size: 20,
-                  ),
+                  icon: Icon(Icons.delete_outline_rounded, color: c.textSubtle, size: 20),
                   tooltip: 'Delete',
                 ),
               ],
@@ -237,20 +216,10 @@ class _HistoryCard extends StatelessWidget {
               entry.content,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.inter(
-                color: AppColors.textMuted,
-                fontSize: 13,
-                height: 1.5,
-              ),
+              style: GoogleFonts.inter(color: c.textMuted, fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Tap to view full post',
-              style: GoogleFonts.inter(
-                color: AppColors.textSubtle,
-                fontSize: 11,
-              ),
-            ),
+            Text('Tap to view full post', style: GoogleFonts.inter(color: c.textSubtle, fontSize: 11)),
           ],
         ),
       ),
@@ -263,6 +232,7 @@ class _HistoryCard extends StatelessWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -271,36 +241,22 @@ class _EmptyState extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.surfaceElevated,
+              color: c.surfaceElevated,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border),
+              border: Border.all(color: c.border),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.history_rounded,
-                color: AppColors.textSubtle,
-                size: 36,
-              ),
-            ),
+            child: Center(child: Icon(Icons.history_rounded, color: c.textSubtle, size: 36)),
           ),
           const SizedBox(height: 20),
           Text(
             'No saved posts yet',
-            style: GoogleFonts.inter(
-              color: AppColors.textPrimary,
-              fontSize: 17,
-              fontWeight: FontWeight.w600,
-            ),
+            style: GoogleFonts.inter(color: c.textPrimary, fontSize: 17, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
             'Generate a post and tap\n"Save to History" to keep it here',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(
-              color: AppColors.textMuted,
-              fontSize: 14,
-              height: 1.5,
-            ),
+            style: GoogleFonts.inter(color: c.textMuted, fontSize: 14, height: 1.5),
           ),
         ],
       ),
@@ -315,48 +271,34 @@ class _HistoryDetailScreen extends StatelessWidget {
   const _HistoryDetailScreen({required this.entry});
 
   Future<void> _copy(BuildContext context) async {
+    final c = context.colors;
     await Clipboard.setData(ClipboardData(text: entry.content));
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(
-                Icons.check_circle_outline_rounded,
-                color: AppColors.accentGreen,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Copied to clipboard!',
-                style: GoogleFonts.inter(color: AppColors.textPrimary),
-              ),
-            ],
-          ),
-          backgroundColor: AppColors.surfaceElevated,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_outline_rounded, color: c.accentGreen, size: 18),
+            const SizedBox(width: 8),
+            Text('Copied to clipboard!', style: GoogleFonts.inter(color: c.textPrimary)),
+          ],
         ),
-      );
+        backgroundColor: c.surfaceElevated,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
       appBar: AppBar(
         title: Text(entry.projectTitle),
         actions: [
+          IconButton(onPressed: () => _copy(context), icon: const Icon(Icons.copy_outlined, size: 20), tooltip: 'Copy'),
           IconButton(
-            onPressed: () => _copy(context),
-            icon: const Icon(Icons.copy_outlined, size: 20),
-            tooltip: 'Copy',
-          ),
-          IconButton(
-            onPressed: () =>
-                Share.share(entry.content, subject: entry.projectTitle),
+            onPressed: () => Share.share(entry.content, subject: entry.projectTitle),
             icon: const Icon(Icons.share_outlined, size: 20),
             tooltip: 'Share',
           ),
@@ -378,32 +320,24 @@ class _HistoryDetailScreen extends StatelessWidget {
                     icon: const Icon(Icons.copy_all_rounded, size: 15),
                     label: const Text('Copy'),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.accent,
-                      side: const BorderSide(color: AppColors.accent),
+                      foregroundColor: c.accent,
+                      side: BorderSide(color: c.accent),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed:
-                        () => Share.share(
-                          entry.content,
-                          subject: entry.projectTitle,
-                        ),
+                    onPressed: () => Share.share(entry.content, subject: entry.projectTitle),
                     icon: const Icon(Icons.ios_share_rounded, size: 15),
                     label: const Text('Share'),
                     style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: AppColors.background,
+                      backgroundColor: c.accent,
+                      foregroundColor: c.background,
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                   ),
                 ),
