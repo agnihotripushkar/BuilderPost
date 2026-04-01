@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../services/key_storage_service.dart';
+import '../providers/service_providers.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
 import 'onboarding_screen.dart';
 import 'api_key_screen.dart';
 import 'project_hub_screen.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
 
@@ -93,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     final prefs = await SharedPreferences.getInstance();
     final onboardingDone = prefs.getBool('onboarding_done') ?? false;
-    final apiKey = await KeyStorageService.getKey();
+    final apiKey = await ref.read(apiKeyProvider.future);
 
     if (!mounted) return;
 

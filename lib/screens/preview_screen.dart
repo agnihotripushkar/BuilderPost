@@ -6,9 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/project_draft.dart';
 import '../models/generated_post.dart';
-import '../models/history_entry.dart';
 import '../providers/composer_provider.dart';
-import '../providers/history_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/post_preview_card.dart';
 import '../widgets/shimmer_loader.dart';
@@ -27,7 +25,6 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   late List<GeneratedPost> _posts;
   late PageController _pageCtrl;
   int _currentIndex = 0;
-  bool _isRegenerating = false;
   final _refineCtrl = TextEditingController();
 
   @override
@@ -80,16 +77,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _saveToHistory() async {
-    final entry = HistoryEntry.create(
-      projectTitle:
-          widget.draft.title.isEmpty
-              ? 'Untitled Project'
-              : widget.draft.title,
-      platform: _currentPost.platform,
-      tone: widget.draft.tone,
-      content: _currentPost.content,
-    );
-    await ref.read(historyProvider.notifier).addEntry(entry);
+    await ref.read(composerProvider.notifier).saveToHistory(_currentIndex);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -118,31 +106,22 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
   }
 
   Future<void> _regenerate() async {
-    setState(() => _isRegenerating = true);
-
     final refineHint = _refineCtrl.text.trim();
-    if (refineHint.isNotEmpty) {
-      ref.read(composerProvider.notifier).updateDescription(
-        '${widget.draft.description}\n\nUser refinement request: $refineHint',
-      );
-    }
 
-    await ref.read(composerProvider.notifier).generate();
-    final state = ref.read(composerProvider);
+    await ref.read(composerProvider.notifier).regenerateWithHint(
+      refineHint,
+      originalDescription: widget.draft.description,
+    );
 
-    if (state.status == ComposerStatus.done &&
-        state.generatedPosts != null &&
-        state.generatedPosts!.isNotEmpty &&
-        mounted) {
+    if (!mounted) return;
+    final newPosts = ref.read(composerProvider).generatedPosts;
+    if (newPosts != null && newPosts.isNotEmpty) {
       setState(() {
-        _posts = state.generatedPosts!;
+        _posts = newPosts;
         _currentIndex = 0;
-        _isRegenerating = false;
-        _refineCtrl.clear();
       });
       _pageCtrl.jumpToPage(0);
-    } else {
-      setState(() => _isRegenerating = false);
+      _refineCtrl.clear();
     }
   }
 
@@ -221,6 +200,10 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final composerStatus = ref.watch(composerProvider).status;
+    final isRegenerating = composerStatus == ComposerStatus.generating ||
+        composerStatus == ComposerStatus.fetchingReadme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Choose Your Post'),
@@ -228,14 +211,14 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
           Tooltip(
             message: 'Copy to clipboard',
             child: IconButton(
-              onPressed: _isRegenerating ? null : _copyToClipboard,
+              onPressed: isRegenerating ? null : _copyToClipboard,
               icon: const Icon(Icons.copy_outlined, size: 20),
             ),
           ),
           Tooltip(
             message: 'Share post',
             child: IconButton(
-              onPressed: _isRegenerating ? null : _share,
+              onPressed: isRegenerating ? null : _share,
               icon: const Icon(Icons.share_outlined, size: 20),
             ),
           ),
@@ -243,7 +226,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
         ],
       ),
       body:
-          _isRegenerating
+          isRegenerating
               ? const Center(
                 child: ShimmerLoader(label: 'Generating 3 new options...'),
               )
