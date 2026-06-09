@@ -225,6 +225,45 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
               ),
             ),
 
+            // Live token-by-token preview of the first variation as it streams.
+            if (state.streamingText.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: c.surfaceElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: c.accent.withOpacity(0.35)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.bolt_rounded, size: 14, color: c.accent),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Generating live…',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: c.accent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      state.streamingText,
+                      style: GoogleFonts.inter(fontSize: 13, color: c.textPrimary, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 40),
           ],
         ),

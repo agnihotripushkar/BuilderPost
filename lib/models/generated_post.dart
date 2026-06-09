@@ -1,26 +1,25 @@
-class GeneratedPost {
-  final String draftId;
-  final String platform;
-  final String content;
-  final DateTime generatedAt;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const GeneratedPost({
-    required this.draftId,
-    required this.platform,
-    required this.content,
-    required this.generatedAt,
-  });
+part 'generated_post.freezed.dart';
+
+@freezed
+abstract class GeneratedPost with _$GeneratedPost {
+  const factory GeneratedPost({
+    required String draftId,
+    required String platform,
+    required String content,
+    required DateTime generatedAt,
+  }) = _GeneratedPost;
 
   factory GeneratedPost.create({
     required String draftId,
     required String platform,
     required String content,
-  }) {
-    return GeneratedPost(
-      draftId: draftId,
-      platform: platform,
-      content: content,
-      generatedAt: DateTime.now(),
-    );
-  }
+  }) =>
+      GeneratedPost(
+        draftId: draftId,
+        platform: platform,
+        content: content,
+        generatedAt: DateTime.now(),
+      );
 }

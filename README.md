@@ -31,15 +31,18 @@ Built for developers who want to share their work on Peerlist, LinkedIn, and X (
 | Layer | Technology |
 |---|---|
 | Framework | Flutter 3.7+ / Dart 3.7+ |
-| AI | Google Gemini 2.5 Flash (`google_generative_ai`) |
+| AI | Google Gemini 2.5 Flash (`google_generative_ai`), streamed token-by-token |
 | State management | Riverpod 2.x |
 | Navigation | GoRouter (`go_router`) with custom page transitions |
+| Models / codegen | `freezed` + `json_serializable` (immutable models, generated JSON) |
+| Networking | `dio` (GitHub README import) |
 | Secure storage | `flutter_secure_storage` (Android Keystore / iOS Keychain) |
 | Local persistence | `shared_preferences` |
 | PDF processing | Syncfusion Flutter PDF |
 | File & image picking | `image_picker`, `file_picker` |
 | Sharing | `share_plus` |
 | Typography | Google Fonts (Inter, JetBrains Mono) |
+| Testing | `flutter_test` — model, provider & service unit tests |
 
 ---
 
@@ -66,7 +69,15 @@ cd BuilderPost
 flutter pub get
 ```
 
-### 3. Run the app
+### 3. Generate code (freezed / json_serializable)
+
+Generated `*.freezed.dart` / `*.g.dart` files are not committed — build them once after cloning (and after editing any model):
+
+```bash
+dart run build_runner build
+```
+
+### 4. Run the app
 
 ```bash
 # Android
