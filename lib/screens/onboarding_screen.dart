@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/service_providers.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
-import 'api_key_screen.dart';
-import 'project_hub_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -27,8 +26,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final apiKey = await ref.read(apiKeyProvider.future);
 
     if (!mounted) return;
-    final next = apiKey != null ? const ProjectHubScreen() : const ApiKeyScreen();
-    Navigator.of(context).pushReplacement(AppRouter.fade(next));
+    context.go(apiKey != null ? AppRoutes.hub : AppRoutes.apiKey);
   }
 
   void _next() {

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 import '../models/project_draft.dart';
 import '../models/generated_post.dart';
 import '../providers/composer_provider.dart';
@@ -139,7 +140,7 @@ class _PreviewScreenState extends ConsumerState<PreviewScreen> {
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: () {
-                    Navigator.pop(context);
+                    context.pop();
                     _regenerate();
                   },
                   icon: const Icon(Icons.auto_awesome_rounded, size: 16),

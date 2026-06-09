@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/composer_provider.dart';
 import '../providers/drafts_provider.dart';
 import '../models/project_draft.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import '../widgets/platform_chips.dart';
 import '../widgets/tone_toggles.dart';
 import '../widgets/image_upload_strip.dart';
-import 'preview_screen.dart';
 
 class ComposerScreen extends ConsumerStatefulWidget {
   final ProjectDraft? existingDraft;
@@ -89,8 +90,12 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
       ref.read(draftsProvider.notifier).addDraft(draft);
 
       if (mounted) {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => PreviewScreen(draft: draft, posts: state.generatedPosts!)),
+        context.push(
+          AppRoutes.preview,
+          extra: (
+            draft: draft,
+            posts: state.generatedPosts!,
+          ),
         );
       }
     } else if (state.status == ComposerStatus.error) {
@@ -118,7 +123,7 @@ class _ComposerScreenState extends ConsumerState<ComposerScreen> {
         leading: BackButton(
           onPressed: () {
             ref.read(composerProvider.notifier).reset();
-            Navigator.pop(context);
+            context.pop();
           },
         ),
       ),

@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 import '../models/history_entry.dart';
 import '../providers/history_provider.dart';
 import '../theme/app_colors.dart';
+import '../utils/app_router.dart';
 import '../widgets/post_preview_card.dart';
 
 class HistoryScreen extends ConsumerWidget {
@@ -72,9 +74,7 @@ class HistoryScreen extends ConsumerWidget {
   }
 
   void _openDetail(BuildContext context, HistoryEntry entry) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => _HistoryDetailScreen(entry: entry)),
-    );
+    context.push(AppRoutes.historyDetail, extra: entry);
   }
 
   void _confirmClearAll(BuildContext context, WidgetRef ref) {
@@ -266,9 +266,9 @@ class _EmptyState extends StatelessWidget {
 
 // ── Detail screen ─────────────────────────────────────────────────────────────
 
-class _HistoryDetailScreen extends StatelessWidget {
+class HistoryDetailScreen extends StatelessWidget {
   final HistoryEntry entry;
-  const _HistoryDetailScreen({required this.entry});
+  const HistoryDetailScreen({super.key, required this.entry});
 
   Future<void> _copy(BuildContext context) async {
     final c = context.colors;

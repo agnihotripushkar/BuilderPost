@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/service_providers.dart';
 import '../services/key_storage_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
-import 'project_hub_screen.dart';
 
 class ApiKeyScreen extends ConsumerStatefulWidget {
   final bool isUpdateMode;
@@ -51,7 +51,7 @@ class _ApiKeyScreenState extends ConsumerState<ApiKeyScreen> {
     setState(() => _saving = false);
 
     if (widget.isUpdateMode && !widget.embedded) {
-      Navigator.of(context).pop();
+      context.pop();
     } else if (widget.isUpdateMode && widget.embedded) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -62,7 +62,7 @@ class _ApiKeyScreenState extends ConsumerState<ApiKeyScreen> {
         ));
       }
     } else {
-      Navigator.of(context).pushReplacement(AppRouter.fade(const ProjectHubScreen()));
+      context.go(AppRoutes.hub);
     }
   }
 
@@ -70,7 +70,7 @@ class _ApiKeyScreenState extends ConsumerState<ApiKeyScreen> {
     await KeyStorageService.deleteKey();
     ref.invalidate(apiKeyProvider);
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(AppRouter.fade(const ApiKeyScreen()), (_) => false);
+    context.go(AppRoutes.apiKey);
   }
 
   Future<void> _openAiStudio() async {

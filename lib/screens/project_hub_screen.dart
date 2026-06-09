@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/drafts_provider.dart';
 import '../models/project_draft.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
-import 'composer_screen.dart';
-import 'resume_projects_screen.dart';
 import 'history_screen.dart';
 import 'settings_screen.dart';
 
@@ -143,11 +142,11 @@ class _ProjectHubScreenState extends ConsumerState<ProjectHubScreen> {
   }
 
   void _openComposer(BuildContext context, {ProjectDraft? draft}) {
-    Navigator.of(context).push(AppRouter.scale(ComposerScreen(existingDraft: draft)));
+    context.push(AppRoutes.composer, extra: draft);
   }
 
   void _openResumeProjects(BuildContext context) {
-    Navigator.of(context).push(AppRouter.slide(const ResumeProjectsScreen()));
+    context.push(AppRoutes.resume);
   }
 }
 
@@ -306,7 +305,7 @@ class _EmptyStateState extends State<_EmptyState>
           const SizedBox(height: 16),
           TextButton.icon(
             onPressed: () {
-              Navigator.of(context).push(AppRouter.slide(const ResumeProjectsScreen()));
+              context.push(AppRoutes.resume);
             },
             icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
             label: const Text('Import from Resume (PDF)'),

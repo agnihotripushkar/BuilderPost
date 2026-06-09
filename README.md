@@ -33,6 +33,7 @@ Built for developers who want to share their work on Peerlist, LinkedIn, and X (
 | Framework | Flutter 3.7+ / Dart 3.7+ |
 | AI | Google Gemini 2.5 Flash (`google_generative_ai`) |
 | State management | Riverpod 2.x |
+| Navigation | GoRouter (`go_router`) with custom page transitions |
 | Secure storage | `flutter_secure_storage` (Android Keystore / iOS Keychain) |
 | Local persistence | `shared_preferences` |
 | PDF processing | Syncfusion Flutter PDF |
@@ -127,7 +128,7 @@ lib/
 │   ├── app_theme.dart
 │   └── app_colors.dart
 └── utils/
-    └── app_router.dart              # Custom navigation transitions
+    └── app_router.dart              # GoRouter config + custom page transitions
 ```
 
 ---
