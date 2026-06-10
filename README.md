@@ -28,21 +28,24 @@ Built for developers who want to share their work on Peerlist, LinkedIn, and X (
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | Flutter 3.7+ / Dart 3.7+ |
-| AI | Google Gemini 2.5 Flash (`google_generative_ai`), streamed token-by-token |
-| State management | Riverpod 2.x |
-| Navigation | GoRouter (`go_router`) with custom page transitions |
-| Models / codegen | `freezed` + `json_serializable` (immutable models, generated JSON) |
-| Networking | `dio` (GitHub README import) |
-| Secure storage | `flutter_secure_storage` (Android Keystore / iOS Keychain) |
-| Local persistence | `shared_preferences` |
-| PDF processing | Syncfusion Flutter PDF |
-| File & image picking | `image_picker`, `file_picker` |
-| Sharing | `share_plus` |
-| Typography | Google Fonts (Inter, JetBrains Mono) |
-| Testing | `flutter_test` — model, provider & service unit tests |
+| Layer | Technology | Description / Usage |
+|---|---|---|
+| **Framework** | Flutter 3.7+ / Dart 3.7+ | High-performance cross-platform application structure |
+| **AI Engine** | Google Gemini 3.5 Flash (`google_generative_ai`) | Generative AI integration using token-by-token streaming |
+| **State Management** | Riverpod 2.x | Robust state and dependency management (`flutter_riverpod`) |
+| **Navigation** | GoRouter (`go_router`) | Declarative navigation routing with custom page transitions |
+| **Models / Codegen** | `freezed` + `json_serializable` | Auto-generated immutable data models and JSON serialization |
+| **Networking** | `dio` | HTTP client with custom timeouts and error handling |
+| **Secure Storage** | `flutter_secure_storage` | Encrypted storage for API keys (Android Keystore / iOS Keychain) |
+| **Local Persistence** | `shared_preferences` | Local key-value storage for project drafts and history entries |
+| **PDF Processing** | Syncfusion Flutter PDF | Text extraction from uploaded PDF resumes and LinkedIn profiles |
+| **UI Components** | `flutter_markdown` + `shimmer` | Rich Markdown post rendering and smooth skeleton loading animation |
+| **File & Image Picking** | `image_picker`, `file_picker` | Picking project screenshots and PDF files from local device storage |
+| **Sharing & URLs** | `share_plus` + `url_launcher` | Platform-native share sheets and launching external links |
+| **Typography** | Google Fonts | Custom modern typography utilizing Inter and JetBrains Mono fonts |
+| **Utilities** | `uuid` | Generating cryptographically secure unique identifiers |
+| **Android Build Stack** | Kotlin `2.1.20` / AGP `8.7.0` / NDK `27.0.x` | Modernized native build configurations for compatibility and performance |
+| **Testing** | `flutter_test` | Comprehensive test suite covering models, providers, services, and widgets |
 
 ---
 
@@ -158,7 +161,7 @@ Splash → Onboarding → API Key Setup (first time only)
             Composer Screen                │
             (title, description, GitHub URL, images, platform, tone)
                   ↓
-            Gemini 2.5 Flash
+            Gemini 3.5 Flash
                   ↓
             Preview Screen (3 variations)
             (copy · share · regenerate · save draft) ──┘

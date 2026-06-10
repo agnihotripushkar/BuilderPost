@@ -8,7 +8,7 @@ class GeminiService {
 
   GeminiService(String apiKey) {
     _model = GenerativeModel(
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.5-flash',
       apiKey: apiKey,
     );
   }
