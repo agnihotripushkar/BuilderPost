@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/service_providers.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
-import 'onboarding_screen.dart';
-import 'api_key_screen.dart';
-import 'project_hub_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -98,16 +96,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!mounted) return;
 
-    Widget next;
+    final String next;
     if (!onboardingDone) {
-      next = const OnboardingScreen();
+      next = AppRoutes.onboarding;
     } else if (apiKey == null) {
-      next = const ApiKeyScreen();
+      next = AppRoutes.apiKey;
     } else {
-      next = const ProjectHubScreen();
+      next = AppRoutes.hub;
     }
 
-    Navigator.of(context).pushReplacement(AppRouter.fade(next));
+    context.go(next);
   }
 
   @override

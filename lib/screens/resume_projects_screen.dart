@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 import '../models/extracted_project.dart';
 import '../models/project_draft.dart';
@@ -9,7 +10,6 @@ import '../providers/service_providers.dart';
 import '../services/gemini_service.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_router.dart';
-import 'composer_screen.dart';
 
 class ResumeProjectsScreen extends ConsumerStatefulWidget {
   const ResumeProjectsScreen({super.key});
@@ -54,7 +54,7 @@ class _ResumeProjectsScreenState extends ConsumerState<ResumeProjectsScreen> {
 
   void _selectProject(ExtractedProject project) {
     final draft = ProjectDraft.create(title: project.title, description: project.description);
-    Navigator.of(context).pushReplacement(AppRouter.scale(ComposerScreen(existingDraft: draft)));
+    context.pushReplacement(AppRoutes.composer, extra: draft);
   }
 
   @override

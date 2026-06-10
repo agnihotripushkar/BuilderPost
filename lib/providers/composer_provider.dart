@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/history_entry.dart';
 import '../models/project_draft.dart';
 import '../models/generated_post.dart';
-import '../services/gemini_service.dart';
 import '../providers/service_providers.dart';
 import '../providers/history_provider.dart';
 
@@ -12,12 +11,17 @@ class ComposerState {
   final ProjectDraft draft;
   final ComposerStatus status;
   final List<GeneratedPost>? generatedPosts;
+
+  /// Live, partial text of the first variation while it streams in.
+  /// Empty until the first chunk arrives; cleared once generation finishes.
+  final String streamingText;
   final String? errorMessage;
 
   const ComposerState({
     required this.draft,
     this.status = ComposerStatus.idle,
     this.generatedPosts,
+    this.streamingText = '',
     this.errorMessage,
   });
 
@@ -25,12 +29,14 @@ class ComposerState {
     ProjectDraft? draft,
     ComposerStatus? status,
     List<GeneratedPost>? generatedPosts,
+    String? streamingText,
     String? errorMessage,
   }) {
     return ComposerState(
       draft: draft ?? this.draft,
       status: status ?? this.status,
       generatedPosts: generatedPosts ?? this.generatedPosts,
+      streamingText: streamingText ?? this.streamingText,
       errorMessage: errorMessage,
     );
   }
@@ -97,24 +103,37 @@ class ComposerNotifier extends AutoDisposeNotifier<ComposerState> {
       readmeContent = await ref.read(githubServiceProvider).fetchReadme(url);
     }
 
-    state = state.copyWith(status: ComposerStatus.generating);
+    state = state.copyWith(status: ComposerStatus.generating, streamingText: '');
 
-    final gemini = GeminiService(apiKey);
+    final gemini = ref.read(geminiServiceFactoryProvider)(apiKey);
+
+    // Consumes one streaming variation to completion. The first variation
+    // (index 0) drives the live "typewriter" preview shown under the loader.
+    Future<String> collectVariation(int index) async {
+      var latest = '';
+      final stream = gemini.generatePostStream(
+        description: state.draft.description,
+        platform: state.draft.platform,
+        tone: state.draft.tone,
+        imagePaths: state.draft.imagePaths,
+        readmeContent: readmeContent,
+        projectUrl: url.isNotEmpty ? url : null,
+      );
+      await for (final partial in stream) {
+        latest = partial;
+        if (index == 0) {
+          state = state.copyWith(streamingText: latest);
+        }
+      }
+      return latest;
+    }
 
     try {
-      final results = await Future.wait(
-        List.generate(
-          3,
-          (_) => gemini.generatePost(
-            description: state.draft.description,
-            platform: state.draft.platform,
-            tone: state.draft.tone,
-            imagePaths: state.draft.imagePaths,
-            readmeContent: readmeContent,
-            projectUrl: url.isNotEmpty ? url : null,
-          ),
-        ),
-      );
+      final results = await Future.wait([
+        collectVariation(0),
+        collectVariation(1),
+        collectVariation(2),
+      ]);
 
       final posts = results
           .map(
@@ -129,6 +148,7 @@ class ComposerNotifier extends AutoDisposeNotifier<ComposerState> {
       state = state.copyWith(
         status: ComposerStatus.done,
         generatedPosts: posts,
+        streamingText: '',
         errorMessage: null,
       );
     } catch (e) {

@@ -13,7 +13,62 @@ class GeminiService {
     );
   }
 
+  /// Streams a generated post token-by-token as the model produces it.
+  ///
+  /// Yields the *cumulative* text after each chunk, so a UI can bind directly
+  /// to the latest value for a live "typewriter" effect. The final emitted
+  /// value is the complete, trimmed post.
+  Stream<String> generatePostStream({
+    required String description,
+    required String platform,
+    required String tone,
+    List<String> imagePaths = const [],
+    String? readmeContent,
+    String? projectUrl,
+  }) async* {
+    final content = await _buildPostContent(
+      description: description,
+      platform: platform,
+      tone: tone,
+      imagePaths: imagePaths,
+      readmeContent: readmeContent,
+      projectUrl: projectUrl,
+    );
+
+    final buffer = StringBuffer();
+    await for (final chunk in _model.generateContentStream([Content.multi(content)])) {
+      final text = chunk.text;
+      if (text != null && text.isNotEmpty) {
+        buffer.write(text);
+        yield buffer.toString();
+      }
+    }
+
+    final result = buffer.toString().trim();
+    yield result.isEmpty ? 'Unable to generate post. Please try again.' : result;
+  }
+
+  /// Non-streaming convenience wrapper — returns the final post text only.
+  /// Built on top of [generatePostStream] so both paths share one prompt.
   Future<String> generatePost({
+    required String description,
+    required String platform,
+    required String tone,
+    List<String> imagePaths = const [],
+    String? readmeContent,
+    String? projectUrl,
+  }) {
+    return generatePostStream(
+      description: description,
+      platform: platform,
+      tone: tone,
+      imagePaths: imagePaths,
+      readmeContent: readmeContent,
+      projectUrl: projectUrl,
+    ).last;
+  }
+
+  Future<List<Part>> _buildPostContent({
     required String description,
     required String platform,
     required String tone,
@@ -57,9 +112,7 @@ Guidelines:
       }
     }
 
-    final response = await _model.generateContent([Content.multi(content)]);
-    return response.text?.trim() ??
-        'Unable to generate post. Please try again.';
+    return content;
   }
 
   /// Extracts a list of projects from a PDF file (e.g., Resume or LinkedIn profile).

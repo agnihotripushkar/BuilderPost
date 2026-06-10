@@ -1,29 +1,31 @@
 import 'dart:convert';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class ExtractedProject {
-  final String title;
-  final String description;
+part 'extracted_project.freezed.dart';
+part 'extracted_project.g.dart';
 
-  const ExtractedProject({
-    required this.title,
-    required this.description,
-  });
+@freezed
+abstract class ExtractedProject with _$ExtractedProject {
+  const factory ExtractedProject({
+    @Default('Untitled Project') String title,
+    @Default('') String description,
+  }) = _ExtractedProject;
 
-  factory ExtractedProject.fromJson(Map<String, dynamic> json) {
-    return ExtractedProject(
-      title: json['title'] ?? 'Untitled Project',
-      description: json['description'] ?? '',
-    );
-  }
+  factory ExtractedProject.fromJson(Map<String, dynamic> json) =>
+      _$ExtractedProjectFromJson(json);
 
+  /// Lenient list parser — returns [] on any malformed input
+  /// (Gemini occasionally emits non-JSON despite instructions).
   static List<ExtractedProject> listFromJson(String jsonStr) {
     try {
       final parsed = jsonDecode(jsonStr);
       if (parsed is List) {
-        return parsed.map((e) => ExtractedProject.fromJson(e)).toList();
+        return parsed
+            .map((e) => ExtractedProject.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
       return [];
-    } catch (e) {
+    } catch (_) {
       return [];
     }
   }
